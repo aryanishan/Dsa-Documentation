@@ -30,7 +30,7 @@ Think of a **Social Network** or a **City Map**.
 - **Vertex (V):** A node in the graph.
 - **Edge (E):** A connection between two vertices.
 - **Directed Graph (Digraph):** Edges have a direction (A -> B).
-- **Undirected Graph:** Edges are bidirectional (A <-> B).
+- **Undirected Graph:** Edges are bidirectional (A &lt;-> B).
 - **Weighted Graph:** Edges have a value or cost associated with them.
 - **Connected Graph:** There is a path between every pair of vertices.
 - **Cycle:** A path that starts and ends at the same vertex without traversing any edge twice.
@@ -57,7 +57,7 @@ A 2D array of size $V \times V$ where $matrix[i][j]$ is `1` if there is an edge 
 ### 2. Adjacency List (Most Common)
 An array of lists (or a hash map). The index represents the vertex, and the list contains all vertices it connects to.
 - **Pros:** Space efficient $O(V + E)$. Fast to iterate over all neighbors of a vertex.
-- **Cons:** Checking if a specific edge exists takes $O(\text{degree of V})$.
+- **Cons:** Checking if a specific edge exists takes $O(D)$ where $D$ is the degree of V.
 
 ```text
 0 -> [1, 2]
