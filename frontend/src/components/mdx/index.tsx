@@ -1,6 +1,7 @@
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 
 import { CodeBlock } from "@/components/mdx/code-block";
+import { CodeTabs, CodeTab } from "@/components/mdx/code-tabs";
 import { cn, flattenText, slugify } from "@/lib/utils";
 
 function Heading({ as: Tag, children, className, ...props }: ComponentPropsWithoutRef<"h2"> & { as: "h2" | "h3" }) {
@@ -43,4 +44,6 @@ export const mdxComponents = {
   code: ({ className, ...props }: ComponentPropsWithoutRef<"code">) => className ? <code className={className} {...props} /> : <code className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[0.85em] text-sky-800 dark:bg-slate-800 dark:text-sky-300" {...props} />,
   Callout,
   Diagram,
+  CodeTabs,
+  CodeTab,
 };
