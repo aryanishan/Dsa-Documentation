@@ -1,0 +1,141 @@
+---
+title: Queue
+description: Learn first-in, first-out processing for scheduling, breadth-first traversal, and streaming work.
+slug: queue
+category: Beginner
+tags:
+  - queue
+  - fifo
+  - breadth-first-search
+order: 7
+readingTime: 7 min read
+---
+
+## Definition
+
+A queue is a first-in, first-out collection. New values enter at the rear with `enqueue`, and the oldest value leaves from the front with `dequeue`.
+
+## Intuition
+
+When order of arrival matters, process the earliest waiting item first. This is the natural order for jobs, messages, and breadth-first exploration.
+
+## Real-world analogy
+
+Customers at a ticket counter join the back of one line and are served from the front.
+
+## Visual explanation
+
+```text
+front                         rear
+  |                             |
+[A] <- dequeue     [B] [C] <- enqueue
+
+Processing order: A, then B, then C
+```
+
+## Time complexity
+
+| Operation | Circular queue / deque | Two-stack queue |
+| --- | --- | --- |
+| Enqueue | `O(1)` | `O(1)` |
+| Dequeue | `O(1)` | `O(1)` amortized |
+| Peek front | `O(1)` | `O(1)` amortized |
+| Search | `O(n)` | `O(n)` |
+
+## Space complexity
+
+| Pattern | Extra space | Notes |
+| --- | --- | --- |
+| BFS queue | `O(w)` | `w` is maximum tree/graph width |
+| Fixed circular queue | `O(capacity)` | Allocated buffer |
+| Two-stack queue | `O(n)` | Items are split across stacks |
+
+## Implementations
+
+### C++
+
+```cpp
+class QueueWithStacks {
+    stack<int> incoming, outgoing;
+
+    void moveIfNeeded() {
+        if (outgoing.empty()) {
+            while (!incoming.empty()) {
+                outgoing.push(incoming.top());
+                incoming.pop();
+            }
+        }
+    }
+
+public:
+    void enqueue(int value) { incoming.push(value); }
+    int dequeue() {
+        moveIfNeeded();
+        int value = outgoing.top();
+        outgoing.pop();
+        return value;
+    }
+};
+```
+
+### Java
+
+```java
+class QueueWithStacks {
+    private final Deque<Integer> incoming = new ArrayDeque<>();
+    private final Deque<Integer> outgoing = new ArrayDeque<>();
+
+    void enqueue(int value) { incoming.push(value); }
+
+    int dequeue() {
+        if (outgoing.isEmpty()) {
+            while (!incoming.isEmpty()) outgoing.push(incoming.pop());
+        }
+        return outgoing.pop();
+    }
+}
+```
+
+### Python
+
+```python
+class QueueWithStacks:
+    def __init__(self) -> None:
+        self.incoming: list[int] = []
+        self.outgoing: list[int] = []
+
+    def enqueue(self, value: int) -> None:
+        self.incoming.append(value)
+
+    def dequeue(self) -> int:
+        if not self.outgoing:
+            while self.incoming:
+                self.outgoing.append(self.incoming.pop())
+        return self.outgoing.pop()
+```
+
+## Dry run
+
+Enqueue `1`, `2`, `3` into the incoming stack. On the first dequeue, transfer them so the outgoing stack has `3, 2, 1` from bottom to top; popping returns `1`, the earliest arrival.
+
+## Common mistakes
+
+- Removing from the same end used for insertion, which creates a stack.
+- Implementing a queue with a plain array and shifting every item on dequeue.
+- Forgetting to handle an empty queue before peek or dequeue.
+
+## Interview questions
+
+- How do you implement a queue with two stacks?
+- Why does BFS require a queue?
+- What is the difference between a deque and a priority queue?
+
+## Practice problems
+
+- Implement Queue using Stacks
+- Number of Recent Calls
+- Rotting Oranges
+
+## Advanced notes
+
+Circular buffers avoid costly shifts by wrapping front and rear indexes. Concurrent queues need explicit thread-safety guarantees; do not assume a standard queue is safe to share across threads.

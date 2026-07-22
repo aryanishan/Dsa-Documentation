@@ -1,0 +1,113 @@
+---
+title: Bit Manipulation
+description: Use binary representation, masks, shifts, and bitwise operators to solve problems efficiently.
+slug: bit-manipulation
+category: Algorithms
+tags: [bit-manipulation, binary, bitmask]
+order: 20
+readingTime: 9 min read
+---
+
+## Definition
+
+Bit manipulation operates directly on the binary digits of integers using AND, OR, XOR, NOT, shifts, and masks.
+
+## Intuition
+
+Each bit is an independent Boolean flag. A mask selects, sets, clears, or toggles particular positions in constant time.
+
+## Real-world analogy
+
+A building access card can encode each permitted floor as one on/off switch; combining permissions is a bitwise OR.
+
+## Visual explanation
+
+~~~text
+x = 10110, mask = 00100
+x & mask  -> 00100  (test bit)
+x | mask  -> 10110  (set bit)
+x ^ mask  -> 10010  (toggle bit)
+x & (x-1) -> 10000  (remove lowest set bit)
+~~~
+
+## Time complexity
+
+| Operation | Time |
+| --- | --- |
+| Set/test/clear one bit | O(1) |
+| XOR aggregate | O(n) |
+| Enumerate set bits | O(number of set bits) |
+| Enumerate all masks of n bits | O(2ⁿ) |
+
+## Space complexity
+
+| Technique | Extra space |
+| --- | --- |
+| Single integer mask | O(1) |
+| Bitmask DP table | O(2ⁿ) |
+| Frequency/XOR scan | O(1) |
+
+## Implementations
+
+### C++
+
+~~~cpp
+int countBits(unsigned int value) {
+  int count = 0;
+  while (value) {
+    value &= value - 1;
+    ++count;
+  }
+  return count;
+}
+~~~
+
+### Java
+
+~~~java
+int countBits(int value) {
+  int count = 0;
+  while (value != 0) {
+    value &= value - 1;
+    count++;
+  }
+  return count;
+}
+~~~
+
+### Python
+
+~~~python
+def count_bits(value: int) -> int:
+    count = 0
+    while value:
+        value &= value - 1
+        count += 1
+    return count
+~~~
+
+## Dry run
+
+For value = 22 (10110), repeatedly clear its lowest set bit: 10110 -> 10100 -> 10000 -> 00000. Three iterations mean three set bits.
+
+## Common mistakes
+
+- Forgetting precedence: parenthesize shifts and masks.
+- Using signed right shift when a logical shift is required.
+- Applying the lowest-set-bit trick to negative numbers without a fixed-width model.
+
+## Interview questions
+
+- Find the single number when every other number appears twice.
+- Determine whether a number is a power of two.
+- Generate all subsets with bitmasks.
+
+## Practice problems
+
+- Single Number
+- Counting Bits
+- Sum of Two Integers
+
+## Advanced notes
+
+XOR forms a reversible parity operation. Bitmasks make compact state sets for subset DP, while bitsets accelerate set intersection and graph reachability through word-level parallelism.

@@ -1,0 +1,125 @@
+---
+title: Strings
+description: Work confidently with character sequences, substrings, frequency counts, and sliding windows.
+slug: strings
+category: Beginner
+tags:
+  - strings
+  - sliding-window
+  - hashing
+order: 4
+readingTime: 8 min read
+---
+
+## Definition
+
+A string is an ordered sequence of characters. It is often represented as an array of bytes or code units; remember that a user-visible Unicode character may use more than one code unit.
+
+## Intuition
+
+Many string problems become array problems: scan indexes, retain a frequency count, and move a window boundary when a rule is violated. Avoid repeatedly rebuilding substrings inside loops.
+
+## Real-world analogy
+
+A string is a row of letter tiles. A sliding window is a movable frame over consecutive tiles, keeping only the characters relevant to the current phrase.
+
+## Visual explanation
+
+```text
+text:  a  b  c  a  b
+window: ------       "abc"
+move left when 'a' repeats
+             ------  "cab"
+```
+
+## Time complexity
+
+| Operation | Typical cost | Notes |
+| --- | --- | --- |
+| Index a character | `O(1)` | For common string representations |
+| Compare strings | `O(n)` | Stops at the first mismatch |
+| Concatenate immutable strings | `O(n)` | May allocate a new string |
+| Sliding-window scan | `O(n)` | Each boundary moves forward |
+
+## Space complexity
+
+| Pattern | Extra space | Example |
+| --- | --- | --- |
+| Two indexes | `O(1)` | Palindrome check |
+| Character frequency table | `O(k)` | `k` character alphabet |
+| Hash map of last positions | `O(min(n, k))` | Unique substring |
+
+## Implementations
+
+### C++
+
+```cpp
+int longestUniqueSubstring(const string& text) {
+    vector<int> last(256, -1);
+    int start = 0, best = 0;
+    for (int end = 0; end < static_cast<int>(text.size()); ++end) {
+        unsigned char ch = text[end];
+        start = max(start, last[ch] + 1);
+        last[ch] = end;
+        best = max(best, end - start + 1);
+    }
+    return best;
+}
+```
+
+### Java
+
+```java
+static int longestUniqueSubstring(String text) {
+    int[] last = new int[128];
+    Arrays.fill(last, -1);
+    int start = 0, best = 0;
+    for (int end = 0; end < text.length(); end++) {
+        char ch = text.charAt(end);
+        start = Math.max(start, last[ch] + 1);
+        last[ch] = end;
+        best = Math.max(best, end - start + 1);
+    }
+    return best;
+}
+```
+
+### Python
+
+```python
+def longest_unique_substring(text: str) -> int:
+    last: dict[str, int] = {}
+    start = best = 0
+    for end, char in enumerate(text):
+        if char in last:
+            start = max(start, last[char] + 1)
+        last[char] = end
+        best = max(best, end - start + 1)
+    return best
+```
+
+## Dry run
+
+For `"abca"`, grow the window through `"abc"` for a best length of `3`. On the final `a`, move `start` after its prior position, leaving `"bca"`, also length `3`.
+
+## Common mistakes
+
+- Treating a substring as a subsequence; substrings are contiguous.
+- Resetting a window start backward when a repeated character lies outside it.
+- Assuming byte indexes always represent complete Unicode characters.
+
+## Interview questions
+
+- How do you check whether two strings are anagrams?
+- How do you find the longest substring without repeating characters?
+- Why can repeated string concatenation be costly?
+
+## Practice problems
+
+- Valid Anagram
+- Longest Substring Without Repeating Characters
+- Longest Palindromic Substring
+
+## Advanced notes
+
+For large Unicode text, choose APIs that iterate code points or grapheme clusters when user-visible characters matter. Prefix functions, Z-functions, tries, and rolling hashes support advanced pattern matching.

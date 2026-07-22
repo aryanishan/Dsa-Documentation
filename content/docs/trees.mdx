@@ -1,0 +1,125 @@
+---
+title: Trees
+description: Learn hierarchical node structures, traversals, depth, height, and balanced-tree reasoning.
+slug: trees
+category: Intermediate
+tags:
+  - tree
+  - traversal
+  - dfs
+  - bfs
+order: 9
+readingTime: 9 min read
+---
+
+## Definition
+
+A tree is a connected, acyclic hierarchy of nodes. A binary tree permits at most two children per node; the top node is the root and nodes without children are leaves.
+
+## Intuition
+
+Each subtree is itself a smaller tree, making recursion natural. Traversals define the order of visiting nodes: preorder, inorder, postorder, and level order.
+
+## Real-world analogy
+
+A company org chart has one top-level leader, branches into teams, and eventually reaches individual contributors with no reports.
+
+## Visual explanation
+
+```text
+        8
+       / \
+      3  10
+     / \   \
+    1   6  14
+```
+
+## Time complexity
+
+| Operation | Balanced tree | Skewed tree |
+| --- | --- | --- |
+| Full traversal | `O(n)` | `O(n)` |
+| Compute height | `O(n)` | `O(n)` |
+| DFS search | `O(n)` | `O(n)` |
+| Level-order traversal | `O(n)` | `O(n)` |
+
+## Space complexity
+
+| Traversal | Extra space | Notes |
+| --- | --- | --- |
+| Recursive DFS | `O(h)` | `h` is tree height |
+| Iterative DFS | `O(h)` typical | Explicit stack |
+| BFS | `O(w)` | `w` is max width |
+
+## Implementations
+
+### C++
+
+```cpp
+struct TreeNode {
+    int value;
+    TreeNode* left = nullptr;
+    TreeNode* right = nullptr;
+};
+
+int height(TreeNode* node) {
+    if (node == nullptr) return 0;
+    return 1 + max(height(node->left), height(node->right));
+}
+```
+
+### Java
+
+```java
+static class TreeNode {
+    int value;
+    TreeNode left, right;
+    TreeNode(int value) { this.value = value; }
+}
+
+static int height(TreeNode node) {
+    if (node == null) return 0;
+    return 1 + Math.max(height(node.left), height(node.right));
+}
+```
+
+### Python
+
+```python
+class TreeNode:
+    def __init__(self, value: int, left=None, right=None):
+        self.value = value
+        self.left = left
+        self.right = right
+
+def height(node: TreeNode | None) -> int:
+    if node is None:
+        return 0
+    return 1 + max(height(node.left), height(node.right))
+```
+
+## Dry run
+
+For the diagram, `height(3)` is `2` because its deepest leaf is one edge below it. The root combines left height `2` and right height `2`, so `height(8)` is `3` nodes.
+
+## Common mistakes
+
+- Mixing height in edges with height in nodes.
+- Forgetting the empty-tree base case.
+- Using inorder traversal as sorted output for a tree that is not a BST.
+
+## Interview questions
+
+- How do DFS and BFS differ on a tree?
+- How do you determine whether a tree is balanced?
+- How do you find the lowest common ancestor?
+
+## Practice problems
+
+- Maximum Depth of Binary Tree
+- Binary Tree Level Order Traversal
+- Diameter of Binary Tree
+
+## Advanced notes
+
+Balanced trees keep height near `log n`; a skewed tree can have height `n`. Iterative traversals provide control over stack use and are essential when recursion depth is unsafe.

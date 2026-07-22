@@ -1,0 +1,125 @@
+---
+title: Time Complexity
+description: Learn how to measure the growth in running time of an algorithm using asymptotic notation.
+slug: time-complexity
+category: Foundations
+tags:
+  - complexity
+  - big-o
+  - analysis
+order: 1
+readingTime: 6 min read
+---
+
+## Definition
+
+Time complexity describes how an algorithm's number of basic operations grows as its input size `n` grows. It deliberately ignores machine speed and constant factors so algorithms can be compared fairly.
+
+## Intuition
+
+Count the work that scales with input size. One loop over `n` items is linear; halving a search range each step is logarithmic; two independent nested loops are usually quadratic.
+
+## Real-world analogy
+
+Finding a name in an unsorted stack of papers takes one-by-one checks. Finding it in an alphabetized phone book means repeatedly opening near the middle and discarding half the pages.
+
+## Visual explanation
+
+```text
+n grows:       8     16     32
+O(log n):      3      4      5
+O(n):          8     16     32
+O(n²):        64    256   1024
+```
+
+## Time complexity
+
+| Pattern | Typical example | Growth |
+| --- | --- | --- |
+| `O(1)` | Array index lookup | Constant |
+| `O(log n)` | Binary search | Halves work |
+| `O(n)` | Scan an array | One pass |
+| `O(n log n)` | Merge sort | Divide and combine |
+| `O(n²)` | Compare every pair | Nested passes |
+
+## Space complexity
+
+| Pattern | Extra memory | Example |
+| --- | --- | --- |
+| `O(1)` | A few variables | Iterative search |
+| `O(log n)` | Call stack | Balanced recursive split |
+| `O(n)` | Copy or helper structure | Merge sort buffer |
+
+## Implementations
+
+### C++
+
+```cpp
+int binarySearch(const vector<int>& values, int target) {
+    int left = 0, right = static_cast<int>(values.size()) - 1;
+    while (left <= right) {                 // O(log n) iterations
+        int mid = left + (right - left) / 2;
+        if (values[mid] == target) return mid;
+        if (values[mid] < target) left = mid + 1;
+        else right = mid - 1;
+    }
+    return -1;
+}
+```
+
+### Java
+
+```java
+static int binarySearch(int[] values, int target) {
+    int left = 0, right = values.length - 1;
+    while (left <= right) {                 // O(log n) time, O(1) space
+        int mid = left + (right - left) / 2;
+        if (values[mid] == target) return mid;
+        if (values[mid] < target) left = mid + 1;
+        else right = mid - 1;
+    }
+    return -1;
+}
+```
+
+### Python
+
+```python
+def binary_search(values: list[int], target: int) -> int:
+    left, right = 0, len(values) - 1
+    while left <= right:                    # O(log n) time, O(1) space
+        mid = left + (right - left) // 2
+        if values[mid] == target:
+            return mid
+        if values[mid] < target:
+            left = mid + 1
+        else:
+            right = mid - 1
+    return -1
+```
+
+## Dry run
+
+For `[2, 5, 8, 12, 16]` and target `12`, inspect index `2` (`8`), discard the left half, then inspect index `3` (`12`). Two checks solve an input of five values.
+
+## Common mistakes
+
+- Treating every nested loop as `O(n²)` when the inner loop shrinks or advances globally.
+- Ignoring early exits, recursion stacks, or input preprocessing.
+- Reporting best-case complexity as the default without stating it.
+
+## Interview questions
+
+- What is the complexity of a loop that doubles `i` each iteration?
+- Why is `O(n log n)` sorting often preferred to `O(n²)` sorting?
+- How do time and auxiliary-space complexity differ?
+
+## Practice problems
+
+- Analyze linear search and binary search.
+- Compare insertion sort with merge sort.
+- Find the complexity of two-pointer and sliding-window loops.
+
+## Advanced notes
+
+Amortized analysis averages expensive operations over a sequence, such as dynamic-array resizing. Big-O is an upper bound; use Big-Theta for a tight bound and Big-Omega for a lower bound when those distinctions matter.

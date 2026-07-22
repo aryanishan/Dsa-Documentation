@@ -1,0 +1,128 @@
+---
+title: Stack
+description: Use last-in, first-out storage for parsing, undo flows, monotonic scans, and depth-first search.
+slug: stack
+category: Beginner
+tags:
+  - stack
+  - lifo
+  - monotonic-stack
+order: 6
+readingTime: 7 min read
+---
+
+## Definition
+
+A stack is a last-in, first-out collection. Values are added with `push`, inspected with `top` or `peek`, and removed with `pop`.
+
+## Intuition
+
+The newest unfinished task belongs on top. Completing it exposes the task immediately below it, which mirrors nested calls and matching delimiters.
+
+## Real-world analogy
+
+A stack of plates is used from the top. The most recently placed plate is the first one you can remove.
+
+## Visual explanation
+
+```text
+push A, then B, then C
+
+top -> [C]
+       [B]
+       [A]
+pop returns C
+```
+
+## Time complexity
+
+| Operation | Array-backed stack | Linked stack |
+| --- | --- | --- |
+| Push | `O(1)` amortized | `O(1)` |
+| Pop | `O(1)` | `O(1)` |
+| Peek | `O(1)` | `O(1)` |
+| Search | `O(n)` | `O(n)` |
+
+## Space complexity
+
+| Use case | Extra space | Notes |
+| --- | --- | --- |
+| Delimiter validation | `O(n)` worst case | All opens may remain |
+| Monotonic stack | `O(n)` | Stores candidate indexes |
+| Iterative DFS | `O(n)` | Replaces recursion stack |
+
+## Implementations
+
+### C++
+
+```cpp
+bool isValid(const string& text) {
+    stack<char> open;
+    unordered_map<char, char> matching{{')', '('}, {']', '['}, {'}', '{'}};
+    for (char ch : text) {
+        if (ch == '(' || ch == '[' || ch == '{') open.push(ch);
+        else if (matching.count(ch)) {
+            if (open.empty() || open.top() != matching[ch]) return false;
+            open.pop();
+        }
+    }
+    return open.empty();
+}
+```
+
+### Java
+
+```java
+static boolean isValid(String text) {
+    Deque<Character> open = new ArrayDeque<>();
+    Map<Character, Character> matching = Map.of(')', '(', ']', '[', '}', '{');
+    for (char ch : text.toCharArray()) {
+        if (ch == '(' || ch == '[' || ch == '{') open.push(ch);
+        else if (matching.containsKey(ch)) {
+            if (open.isEmpty() || open.pop() != matching.get(ch)) return false;
+        }
+    }
+    return open.isEmpty();
+}
+```
+
+### Python
+
+```python
+def is_valid(text: str) -> bool:
+    open_chars: list[str] = []
+    matching = {')': '(', ']': '[', '}': '{'}
+    for char in text:
+        if char in '([{':
+            open_chars.append(char)
+        elif char in matching:
+            if not open_chars or open_chars.pop() != matching[char]:
+                return False
+    return not open_chars
+```
+
+## Dry run
+
+For `"{[]}"`, push `{`, push `[`, pop `[` for `]`, then pop `{` for `}`. The stack is empty, so the expression is valid.
+
+## Common mistakes
+
+- Popping before checking whether the stack is empty.
+- Treating a queue as a stack by removing from the wrong end.
+- Forgetting that a monotonic stack usually stores indexes, not just values.
+
+## Interview questions
+
+- How do you validate parentheses?
+- How can a stack implement an undo feature?
+- What is a monotonic stack useful for?
+
+## Practice problems
+
+- Valid Parentheses
+- Daily Temperatures
+- Largest Rectangle in Histogram
+
+## Advanced notes
+
+Monotonic stacks maintain increasing or decreasing candidates and make nearest-greater or nearest-smaller queries linear. The call stack is an implicit stack managed by the runtime.

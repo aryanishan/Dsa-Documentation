@@ -1,0 +1,134 @@
+---
+title: Graphs
+description: Model relationships with vertices and edges, then traverse and analyze them efficiently.
+slug: graphs
+category: Data Structures
+tags: [graph, bfs, dfs, traversal]
+order: 13
+readingTime: 10 min read
+---
+
+## Definition
+
+A graph consists of vertices connected by edges. Edges may be directed or undirected, weighted or unweighted.
+
+## Intuition
+
+Graphs capture arbitrary relationships. Choose an adjacency list for sparse graphs and an adjacency matrix when dense edge lookup matters.
+
+## Real-world analogy
+
+Cities are vertices and roads are edges; a route planner explores which cities can be reached from a starting city.
+
+## Visual explanation
+
+~~~text
+0 ---- 1
+|    / |
+|  /   |
+2 ---- 3
+
+BFS from 0 visits: 0, then 1 and 2, then 3.
+~~~
+
+## Time complexity
+
+| Operation/algorithm | Adjacency list | Adjacency matrix |
+| --- | --- | --- |
+| Add edge | O(1) | O(1) |
+| Check edge | O(degree) | O(1) |
+| BFS / DFS | O(V + E) | O(V²) |
+
+## Space complexity
+
+| Representation | Space |
+| --- | --- |
+| Adjacency list | O(V + E) |
+| Adjacency matrix | O(V²) |
+| BFS visited + queue | O(V) |
+
+## Implementations
+
+### C++
+
+~~~cpp
+#include <queue>
+#include <vector>
+using namespace std;
+
+vector<int> bfs(const vector<vector<int>>& graph, int start) {
+  vector<int> order, seen(graph.size());
+  queue<int> q;
+  q.push(start); seen[start] = 1;
+  while (!q.empty()) {
+    int node = q.front(); q.pop(); order.push_back(node);
+    for (int next : graph[node]) if (!seen[next]) {
+      seen[next] = 1; q.push(next);
+    }
+  }
+  return order;
+}
+~~~
+
+### Java
+
+~~~java
+import java.util.*;
+
+List<Integer> bfs(List<List<Integer>> graph, int start) {
+  List<Integer> order = new ArrayList<>();
+  boolean[] seen = new boolean[graph.size()];
+  Queue<Integer> queue = new ArrayDeque<>();
+  queue.offer(start); seen[start] = true;
+  while (!queue.isEmpty()) {
+    int node = queue.poll(); order.add(node);
+    for (int next : graph.get(node)) if (!seen[next]) {
+      seen[next] = true; queue.offer(next);
+    }
+  }
+  return order;
+}
+~~~
+
+### Python
+
+~~~python
+from collections import deque
+
+def bfs(graph: list[list[int]], start: int) -> list[int]:
+    seen, order, queue = {start}, [], deque([start])
+    while queue:
+        node = queue.popleft()
+        order.append(node)
+        for nxt in graph[node]:
+            if nxt not in seen:
+                seen.add(nxt)
+                queue.append(nxt)
+    return order
+~~~
+
+## Dry run
+
+Starting at 0, enqueue its unseen neighbors 1 and 2. Process 1, discover 3; process 2, where 3 is already discovered; then process 3. Order: 0, 1, 2, 3.
+
+## Common mistakes
+
+- Marking a node visited only when dequeued, which can enqueue duplicates.
+- Treating a directed graph as undirected.
+- Forgetting to start a traversal for every component.
+
+## Interview questions
+
+- Count islands in a grid.
+- Detect a cycle in a directed graph.
+- Find the shortest path in an unweighted graph.
+
+## Practice problems
+
+- Number of Islands
+- Course Schedule
+- Clone Graph
+
+## Advanced notes
+
+Dijkstra handles non-negative weights, Bellman-Ford tolerates negative edges, and Floyd-Warshall solves all-pairs shortest paths. Topological order exists only for directed acyclic graphs.

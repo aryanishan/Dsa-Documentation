@@ -1,0 +1,136 @@
+---
+title: Disjoint Set Union
+description: Track connected components with union-find, path compression, and union by size or rank.
+slug: disjoint-set-union
+category: Advanced Data Structures
+tags: [dsu, union-find, graph]
+order: 19
+readingTime: 8 min read
+---
+
+## Definition
+
+Disjoint Set Union (DSU), also called union-find, maintains a partition of elements into non-overlapping connected sets.
+
+## Intuition
+
+Each set has a representative root. Path compression flattens find paths, while union by size/rank keeps trees shallow.
+
+## Real-world analogy
+
+As roads are built between towns, DSU quickly answers whether two towns have become part of the same road network.
+
+## Visual explanation
+
+~~~text
+before union(1, 3):   1       3
+                      |       |
+                      2       4
+
+after union roots:    1
+                     / \
+                    2   3
+                        |
+                        4
+~~~
+
+## Time complexity
+
+| Operation | With compression + union by size |
+| --- | --- |
+| Find | O(α(n)) amortized |
+| Union | O(α(n)) amortized |
+| Build n singleton sets | O(n) |
+
+## Space complexity
+
+| Structure | Space |
+| --- | --- |
+| Parent and size/rank arrays | O(n) |
+| Recursive find stack | Nearly O(1) after compression |
+
+## Implementations
+
+### C++
+
+~~~cpp
+#include <numeric>
+#include <vector>
+using namespace std;
+
+struct DSU {
+  vector<int> parent, size;
+  DSU(int n) : parent(n), size(n, 1) { iota(parent.begin(), parent.end(), 0); }
+  int find(int x) { return parent[x] == x ? x : parent[x] = find(parent[x]); }
+  bool unite(int a, int b) {
+    a = find(a); b = find(b); if (a == b) return false;
+    if (size[a] < size[b]) swap(a, b);
+    parent[b] = a; size[a] += size[b]; return true;
+  }
+};
+~~~
+
+### Java
+
+~~~java
+class DSU {
+  int[] parent, size;
+  DSU(int n) {
+    parent = new int[n]; size = new int[n];
+    for (int i = 0; i < n; i++) { parent[i] = i; size[i] = 1; }
+  }
+  int find(int x) { return parent[x] == x ? x : (parent[x] = find(parent[x])); }
+  boolean unite(int a, int b) {
+    a = find(a); b = find(b); if (a == b) return false;
+    if (size[a] < size[b]) { int t = a; a = b; b = t; }
+    parent[b] = a; size[a] += size[b]; return true;
+  }
+}
+~~~
+
+### Python
+
+~~~python
+class DSU:
+    def __init__(self, n: int) -> None:
+        self.parent = list(range(n))
+        self.size = [1] * n
+
+    def find(self, node: int) -> int:
+        if self.parent[node] != node:
+            self.parent[node] = self.find(self.parent[node])
+        return self.parent[node]
+
+    def unite(self, a: int, b: int) -> bool:
+        a, b = self.find(a), self.find(b)
+        if a == b: return False
+        if self.size[a] < self.size[b]: a, b = b, a
+        self.parent[b] = a; self.size[a] += self.size[b]
+        return True
+~~~
+
+## Dry run
+
+Start with {0}, {1}, {2}, {3}. Union (0,1) and (2,3), then union (1,3). Finds reveal the roots differ, so the two components merge into one.
+
+## Common mistakes
+
+- Comparing raw parent values instead of representatives.
+- Skipping both path compression and union by rank/size.
+- Using DSU for deletions, which it does not handle efficiently.
+
+## Interview questions
+
+- Detect a redundant connection.
+- Count connected components.
+- Find the earliest time everyone becomes connected.
+
+## Practice problems
+
+- Number of Provinces
+- Redundant Connection
+- Accounts Merge
+
+## Advanced notes
+
+Rollback DSU supports offline dynamic connectivity. Weighted DSU can track relative values, and Kruskal's minimum spanning tree algorithm depends on DSU to reject cycle-forming edges.

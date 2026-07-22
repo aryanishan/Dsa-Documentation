@@ -1,0 +1,112 @@
+---
+title: Space Complexity
+description: Measure the memory an algorithm needs beyond its input and choose memory-efficient designs.
+slug: space-complexity
+category: Foundations
+tags:
+  - complexity
+  - memory
+  - auxiliary-space
+order: 2
+readingTime: 6 min read
+---
+
+## Definition
+
+Space complexity is the memory required by an algorithm as input size `n` grows. It includes auxiliary variables, temporary structures, and recursive call frames; clarify whether the input itself is counted.
+
+## Intuition
+
+Ask what must remain alive at the same time. An in-place scan needs only a few variables, while a copied array or a recursion path may grow with the input.
+
+## Real-world analogy
+
+Editing a document directly on a whiteboard uses little extra room. Making a complete duplicate before every edit consumes another full board.
+
+## Visual explanation
+
+```text
+Input: [4, 1, 7, 3]
+
+In place:  [4, 1, 7, 3] + left/right       -> O(1) auxiliary space
+Copy:      [4, 1, 7, 3] + [1, 3, 4, 7]     -> O(n) auxiliary space
+```
+
+## Time complexity
+
+| Approach | Time | Why |
+| --- | --- | --- |
+| In-place reverse | `O(n)` | Visits each element once |
+| Copy then reverse | `O(n)` | Still visits each element once |
+| Merge sort | `O(n log n)` | Splits and merges levels |
+
+## Space complexity
+
+| Approach | Auxiliary space | Why |
+| --- | --- | --- |
+| Two-pointer reverse | `O(1)` | A few indexes and a temporary |
+| Hash-set deduplication | `O(n)` | Stores seen values |
+| Recursive DFS on a chain | `O(n)` | One call frame per node |
+
+## Implementations
+
+### C++
+
+```cpp
+void reverseInPlace(vector<int>& values) {
+    int left = 0, right = static_cast<int>(values.size()) - 1;
+    while (left < right) {
+        swap(values[left++], values[right--]); // O(1) auxiliary space
+    }
+}
+```
+
+### Java
+
+```java
+static void reverseInPlace(int[] values) {
+    int left = 0, right = values.length - 1;
+    while (left < right) {
+        int temp = values[left];
+        values[left++] = values[right];
+        values[right--] = temp;               // O(1) auxiliary space
+    }
+}
+```
+
+### Python
+
+```python
+def reverse_in_place(values: list[int]) -> None:
+    left, right = 0, len(values) - 1
+    while left < right:
+        values[left], values[right] = values[right], values[left]
+        left += 1
+        right -= 1                              # O(1) auxiliary space
+```
+
+## Dry run
+
+Reverse `[4, 1, 7, 3]`: swap the outer pair to get `[3, 1, 7, 4]`, then swap the inner pair to get `[3, 7, 1, 4]`. Only two indexes and one temporary value are needed.
+
+## Common mistakes
+
+- Calling an algorithm `O(1)` space after building an output list.
+- Forgetting that recursive calls consume stack space.
+- Confusing in-place mutation with no memory allocation in a runtime.
+
+## Interview questions
+
+- What is the auxiliary space of recursive binary search?
+- Can an `O(n)`-time problem be solved in `O(1)` extra space?
+- When is a hash map worth its memory cost?
+
+## Practice problems
+
+- Reverse an array in place.
+- Remove duplicates from a sorted array.
+- Compare iterative and recursive tree traversal memory use.
+
+## Advanced notes
+
+Peak memory, not total allocations over time, determines space complexity. Tail-call optimization can change practical stack use, but do not assume a language runtime performs it unless documented.

@@ -1,0 +1,122 @@
+---
+title: Heap
+description: Learn heaps, priority queues, and their use in fast minimum and maximum queries.
+slug: heap
+category: Data Structures
+tags: [heap, priority-queue, tree]
+order: 11
+readingTime: 8 min read
+---
+
+## Definition
+
+A heap is a complete binary tree stored efficiently in an array. In a min-heap every parent is no larger than its children; a max-heap reverses that rule.
+
+## Intuition
+
+Keep the most important item at the root. After inserting or removing it, repair only the path from that node to the root or a leaf.
+
+## Real-world analogy
+
+An emergency-room queue serves the most urgent patient next while new arrivals are placed in the correct priority position.
+
+## Visual explanation
+
+~~~text
+        2                 array: [2, 5, 4, 9, 7]
+      /   \
+     5     4       index i -> children 2i + 1, 2i + 2
+    / \
+   9   7
+~~~
+
+## Time complexity
+
+| Operation | Binary heap |
+| --- | --- |
+| Peek min/max | O(1) |
+| Insert | O(log n) |
+| Extract root | O(log n) |
+| Build heap | O(n) |
+| Search arbitrary value | O(n) |
+
+## Space complexity
+
+| Representation | Extra space |
+| --- | --- |
+| Array-backed heap | O(n) |
+| Heap sort in place | O(1) auxiliary |
+
+## Implementations
+
+### C++
+
+~~~cpp
+#include <queue>
+#include <vector>
+using namespace std;
+
+int kthSmallest(const vector<int>& values, int k) {
+  priority_queue<int> topK;
+  for (int value : values) {
+    topK.push(value);
+    if (static_cast<int>(topK.size()) > k) topK.pop();
+  }
+  return topK.top();
+}
+~~~
+
+### Java
+
+~~~java
+import java.util.*;
+
+int kthSmallest(int[] values, int k) {
+  PriorityQueue<Integer> topK = new PriorityQueue<>(Collections.reverseOrder());
+  for (int value : values) {
+    topK.offer(value);
+    if (topK.size() > k) topK.poll();
+  }
+  return topK.peek();
+}
+~~~
+
+### Python
+
+~~~python
+import heapq
+
+def kth_smallest(values: list[int], k: int) -> int:
+    heap: list[int] = []
+    for value in values:
+        heapq.heappush(heap, -value)
+        if len(heap) > k:
+            heapq.heappop(heap)
+    return -heap[0]
+~~~
+
+## Dry run
+
+For the 3rd smallest value in [7, 2, 5, 1], maintain a max-heap of size three: [7], [7,2], [7,2,5], then insert 1 and remove 7. The root is 5, the third smallest.
+
+## Common mistakes
+
+- Mixing up min-heap and max-heap defaults in a language library.
+- Assuming a heap is fully sorted; only parent-child order is guaranteed.
+- Forgetting that arbitrary lookup is still O(n).
+
+## Interview questions
+
+- Find the kth largest element in a stream.
+- Merge k sorted linked lists.
+- Return the top k frequent elements.
+
+## Practice problems
+
+- Kth Largest Element in an Array
+- Find Median from Data Stream
+- Meeting Rooms II
+
+## Advanced notes
+
+Indexed heaps support decrease-key, which powers Dijkstra's algorithm. For meld-heavy workloads, consider pairing or Fibonacci heaps; binary heaps are usually faster in practice.

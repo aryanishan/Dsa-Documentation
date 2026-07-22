@@ -1,0 +1,136 @@
+---
+title: Linked Lists
+description: Understand node-based lists, pointer manipulation, fast and slow pointers, and list reversal.
+slug: linked-lists
+category: Beginner
+tags:
+  - linked-list
+  - pointers
+  - fast-slow-pointers
+order: 5
+readingTime: 8 min read
+---
+
+## Definition
+
+A linked list is a sequence of nodes where each node stores a value and a link to the next node. A doubly linked list also keeps a previous link for reverse traversal.
+
+## Intuition
+
+Nodes need not be adjacent in memory. Inserting after a known node is cheap because only links change, but reaching a position requires following links from the head.
+
+## Real-world analogy
+
+It is like a scavenger hunt: each card tells you where the next card is. Adding a new card after one clue is easy, but you cannot jump directly to the twentieth clue.
+
+## Visual explanation
+
+```text
+head
+  |
+ [1|next] -> [2|next] -> [3|null]
+```
+
+## Time complexity
+
+| Operation | Singly linked list | Notes |
+| --- | --- | --- |
+| Access by index | `O(n)` | Follow links |
+| Insert after known node | `O(1)` | Rewire one link |
+| Delete after known node | `O(1)` | Rewire one link |
+| Search by value | `O(n)` | Scan nodes |
+
+## Space complexity
+
+| Pattern | Extra space | Notes |
+| --- | --- | --- |
+| Iterative reverse | `O(1)` | Three pointers |
+| Recursive reverse | `O(n)` | Call stack |
+| Hash-set cycle check | `O(n)` | Stores visited nodes |
+
+## Implementations
+
+### C++
+
+```cpp
+struct ListNode {
+    int value;
+    ListNode* next;
+};
+
+ListNode* reverse(ListNode* head) {
+    ListNode* previous = nullptr;
+    while (head != nullptr) {
+        ListNode* next = head->next;
+        head->next = previous;
+        previous = head;
+        head = next;
+    }
+    return previous;
+}
+```
+
+### Java
+
+```java
+static class ListNode {
+    int value;
+    ListNode next;
+    ListNode(int value) { this.value = value; }
+}
+
+static ListNode reverse(ListNode head) {
+    ListNode previous = null;
+    while (head != null) {
+        ListNode next = head.next;
+        head.next = previous;
+        previous = head;
+        head = next;
+    }
+    return previous;
+}
+```
+
+### Python
+
+```python
+class ListNode:
+    def __init__(self, value: int, next_node=None):
+        self.value = value
+        self.next = next_node
+
+def reverse(head: ListNode | None) -> ListNode | None:
+    previous = None
+    while head is not None:
+        next_node = head.next
+        head.next = previous
+        previous = head
+        head = next_node
+    return previous
+```
+
+## Dry run
+
+Reverse `1 -> 2 -> 3`: point `1` to `null`, then point `2` to `1`, then point `3` to `2`. The final `previous` pointer is the new head, `3`.
+
+## Common mistakes
+
+- Losing the next node before changing `head.next`.
+- Dereferencing `null` on an empty or one-node list.
+- Using a value comparison instead of node identity to detect a cycle.
+
+## Interview questions
+
+- How do you detect a cycle without extra space?
+- How do you find the middle node?
+- How do you merge two sorted linked lists?
+
+## Practice problems
+
+- Reverse Linked List
+- Linked List Cycle
+- Merge Two Sorted Lists
+
+## Advanced notes
+
+Floyd's tortoise-and-hare technique detects a cycle in `O(n)` time and `O(1)` space. Dummy head nodes simplify edge cases in insertion and merge routines.

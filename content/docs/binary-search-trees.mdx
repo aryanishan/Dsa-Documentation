@@ -1,0 +1,135 @@
+---
+title: Binary Search Trees
+description: Use ordered binary trees for efficient searching, insertion, deletion, and range queries.
+slug: binary-search-trees
+category: Intermediate
+tags:
+  - bst
+  - binary-tree
+  - ordered-set
+order: 10
+readingTime: 9 min read
+---
+
+## Definition
+
+A binary search tree (BST) is a binary tree where every value in a node's left subtree is smaller and every value in its right subtree is larger, according to a chosen duplicate policy.
+
+## Intuition
+
+Each comparison discards one whole subtree. In a balanced BST, that halves the remaining search region much like binary search over a sorted array.
+
+## Real-world analogy
+
+Imagine a decision tree for shelving books: compare a requested title to the current shelf marker, then walk only to the alphabetically earlier or later section.
+
+## Visual explanation
+
+```text
+        8
+       / \
+      3  10
+     / \   \
+    1   6  14
+
+Search 6: 8 -> 3 -> 6
+```
+
+## Time complexity
+
+| Operation | Balanced BST | Skewed BST |
+| --- | --- | --- |
+| Search | `O(log n)` | `O(n)` |
+| Insert | `O(log n)` | `O(n)` |
+| Delete | `O(log n)` | `O(n)` |
+| Inorder traversal | `O(n)` | `O(n)` |
+
+## Space complexity
+
+| Pattern | Extra space | Notes |
+| --- | --- | --- |
+| Iterative search | `O(1)` | A current pointer |
+| Recursive insert | `O(h)` | Call stack depth `h` |
+| Inorder traversal stack | `O(h)` | Deferred ancestors |
+
+## Implementations
+
+### C++
+
+```cpp
+struct Node {
+    int value;
+    Node* left = nullptr;
+    Node* right = nullptr;
+    explicit Node(int value) : value(value) {}
+};
+
+Node* insert(Node* root, int value) {
+    if (root == nullptr) return new Node(value);
+    if (value < root->value) root->left = insert(root->left, value);
+    else if (value > root->value) root->right = insert(root->right, value);
+    return root; // ignores duplicate values
+}
+```
+
+### Java
+
+```java
+static class Node {
+    int value;
+    Node left, right;
+    Node(int value) { this.value = value; }
+}
+
+static Node insert(Node root, int value) {
+    if (root == null) return new Node(value);
+    if (value < root.value) root.left = insert(root.left, value);
+    else if (value > root.value) root.right = insert(root.right, value);
+    return root; // ignores duplicate values
+}
+```
+
+### Python
+
+```python
+class Node:
+    def __init__(self, value: int):
+        self.value = value
+        self.left: Node | None = None
+        self.right: Node | None = None
+
+def insert(root: Node | None, value: int) -> Node:
+    if root is None:
+        return Node(value)
+    if value < root.value:
+        root.left = insert(root.left, value)
+    elif value > root.value:
+        root.right = insert(root.right, value)
+    return root  # ignores duplicate values
+```
+
+## Dry run
+
+Insert `6` into the shown tree: compare with `8` and move left; compare with `3` and move right; the right child position is empty, so create node `6` there.
+
+## Common mistakes
+
+- Checking only direct children when validating a BST instead of carrying valid min/max bounds.
+- Forgetting to define how duplicate values are handled.
+- Deleting a node with two children without replacing it by its inorder successor or predecessor.
+
+## Interview questions
+
+- How do you validate a binary search tree?
+- How do you find the kth smallest value?
+- How do you delete a BST node with two children?
+
+## Practice problems
+
+- Validate Binary Search Tree
+- Kth Smallest Element in a BST
+- Lowest Common Ancestor of a Binary Search Tree
+
+## Advanced notes
+
+Plain BSTs do not self-balance. AVL trees, red-black trees, treaps, and B-trees add balancing rules to protect logarithmic performance; many language ordered maps and sets use one of these variants.

@@ -1,0 +1,112 @@
+---
+title: Recursion
+description: Break problems into smaller self-similar calls with clear base cases and controlled call-stack use.
+slug: recursion
+category: Beginner
+tags:
+  - recursion
+  - divide-and-conquer
+  - call-stack
+order: 8
+readingTime: 8 min read
+---
+
+## Definition
+
+Recursion solves a problem by calling the same function on a smaller instance. Every recursive solution needs a base case that stops the calls and a recursive step that moves toward it.
+
+## Intuition
+
+Trust the function to solve a smaller version after you define what one layer must do. The runtime remembers unfinished layers in the call stack and resumes them as calls return.
+
+## Real-world analogy
+
+To find a page in a nested folder, open one folder and ask the same process to search the smaller folder inside it until a file or an empty folder is reached.
+
+## Visual explanation
+
+```text
+power(2, 5)
+  -> power(2, 2)
+       -> power(2, 1)
+            -> power(2, 0) = 1
+returns unwind back to the first call
+```
+
+## Time complexity
+
+| Recurrence pattern | Example | Time |
+| --- | --- | --- |
+| One call on `n - 1` | Factorial | `O(n)` |
+| One call on `n / 2` | Fast power | `O(log n)` |
+| Two calls on `n - 1` | Naive Fibonacci | `O(2ⁿ)` |
+| Split and combine | Merge sort | `O(n log n)` |
+
+## Space complexity
+
+| Method | Auxiliary space | Reason |
+| --- | --- | --- |
+| Iterative loop | `O(1)` | No call frames |
+| Linear recursion | `O(n)` | Depth reaches `n` |
+| Divide-and-conquer recursion | `O(log n)` | Depth halves each call |
+
+## Implementations
+
+### C++
+
+```cpp
+long long fastPower(long long base, int exponent) {
+    if (exponent == 0) return 1;
+    long long half = fastPower(base, exponent / 2);
+    long long squared = half * half;
+    return exponent % 2 == 0 ? squared : squared * base;
+}
+```
+
+### Java
+
+```java
+static long fastPower(long base, int exponent) {
+    if (exponent == 0) return 1;
+    long half = fastPower(base, exponent / 2);
+    long squared = half * half;
+    return exponent % 2 == 0 ? squared : squared * base;
+}
+```
+
+### Python
+
+```python
+def fast_power(base: int, exponent: int) -> int:
+    if exponent == 0:
+        return 1
+    half = fast_power(base, exponent // 2)
+    squared = half * half
+    return squared if exponent % 2 == 0 else squared * base
+```
+
+## Dry run
+
+For `fastPower(2, 5)`, recursively compute `2²`, square it to get `16`, then multiply once more by `2` because `5` is odd. The result is `32` after only logarithmic-depth calls.
+
+## Common mistakes
+
+- Missing a base case or failing to reduce the problem.
+- Recomputing overlapping subproblems, as in naive Fibonacci.
+- Causing stack overflow with deep input when an iterative form is safer.
+
+## Interview questions
+
+- How do you convert recursive DFS to iterative DFS?
+- Why is naive Fibonacci slow?
+- What is the recurrence for merge sort?
+
+## Practice problems
+
+- Pow(x, n)
+- Generate Parentheses
+- Subsets
+
+## Advanced notes
+
+Memoization caches recursive results and often turns exponential recurrences into polynomial ones. Tail recursion is elegant, but runtime support for eliminating tail-call frames varies by language.

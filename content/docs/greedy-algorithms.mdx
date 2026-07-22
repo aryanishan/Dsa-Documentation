@@ -1,0 +1,114 @@
+---
+title: Greedy Algorithms
+description: Make locally optimal choices when they can be proven to build a global optimum.
+slug: greedy-algorithms
+category: Algorithms
+tags: [greedy, optimization, intervals]
+order: 14
+readingTime: 8 min read
+---
+
+## Definition
+
+A greedy algorithm builds a solution one choice at a time, permanently taking the best feasible local option.
+
+## Intuition
+
+Greedy is valid only when an exchange argument or a greedy-choice property proves that an optimal solution can include the chosen local step.
+
+## Real-world analogy
+
+To schedule the most meetings in one room, always take the meeting that finishes earliest, leaving maximum time for later meetings.
+
+## Visual explanation
+
+~~~text
+sorted by finish: [1,2] [2,4] [3,5] [5,7]
+pick [1,2] -> pick [2,4] -> skip [3,5] -> pick [5,7]
+~~~
+
+## Time complexity
+
+| Step | Activity selection |
+| --- | --- |
+| Sort intervals | O(n log n) |
+| Select compatible intervals | O(n) |
+| Total | O(n log n) |
+
+## Space complexity
+
+| Approach | Extra space |
+| --- | --- |
+| Sort in place + output indices | O(1) to O(n) |
+| Copy before sorting | O(n) |
+
+## Implementations
+
+### C++
+
+~~~cpp
+#include <algorithm>
+#include <vector>
+using namespace std;
+
+int maxMeetings(vector<vector<int>> meetings) {
+  sort(meetings.begin(), meetings.end(),
+       [](auto& a, auto& b) { return a[1] < b[1]; });
+  int count = 0, end = -1;
+  for (auto& meeting : meetings)
+    if (meeting[0] >= end) { ++count; end = meeting[1]; }
+  return count;
+}
+~~~
+
+### Java
+
+~~~java
+import java.util.*;
+
+int maxMeetings(int[][] meetings) {
+  Arrays.sort(meetings, Comparator.comparingInt(a -> a[1]));
+  int count = 0, end = -1;
+  for (int[] meeting : meetings)
+    if (meeting[0] >= end) { count++; end = meeting[1]; }
+  return count;
+}
+~~~
+
+### Python
+
+~~~python
+def max_meetings(meetings: list[tuple[int, int]]) -> int:
+    end, count = -1, 0
+    for start, finish in sorted(meetings, key=lambda item: item[1]):
+        if start >= end:
+            count += 1
+            end = finish
+    return count
+~~~
+
+## Dry run
+
+For [(1,2), (2,4), (3,5), (5,7)], choose (1,2), then (2,4). (3,5) overlaps, so skip it; (5,7) fits. Result: three meetings.
+
+## Common mistakes
+
+- Applying greedy because it feels intuitive without a proof.
+- Sorting by start time instead of the relevant choice criterion.
+- Using strict versus non-strict overlap rules incorrectly.
+
+## Interview questions
+
+- Can you jump to the last index?
+- What is the minimum number of arrows for intervals?
+- Schedule jobs to maximize profit.
+
+## Practice problems
+
+- Non-overlapping Intervals
+- Jump Game
+- Partition Labels
+
+## Advanced notes
+
+Greedy commonly combines sorting with a proof by exchange. When local decisions need revisiting, dynamic programming or a priority queue sweep is often the right replacement.

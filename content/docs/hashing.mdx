@@ -1,0 +1,120 @@
+---
+title: Hashing
+description: Use hash tables and hash functions for near-constant-time lookup and frequency counting.
+slug: hashing
+category: Data Structures
+tags: [hashing, hash-map, hash-set]
+order: 12
+readingTime: 8 min read
+---
+
+## Definition
+
+Hashing maps a key to an array bucket through a hash function. A hash map stores key-value pairs; a hash set stores unique keys.
+
+## Intuition
+
+Instead of scanning all items, compute where an item should live. Good hash functions distribute keys evenly, making each bucket small.
+
+## Real-world analogy
+
+A library call number sends you directly to one shelf rather than making you inspect every book.
+
+## Visual explanation
+
+~~~text
+hash("cat") -> 2
+buckets: 0: []   1: [dog]   2: [cat -> coat]   3: []
+collision: different keys land in one bucket and are resolved by chaining/probing
+~~~
+
+## Time complexity
+
+| Operation | Average | Worst case |
+| --- | --- | --- |
+| Insert | O(1) | O(n) |
+| Lookup | O(1) | O(n) |
+| Delete | O(1) | O(n) |
+| Iterate | O(n) | O(n) |
+
+## Space complexity
+
+| Structure | Space |
+| --- | --- |
+| Hash map/set with n entries | O(n) |
+| Frequency table over alphabet size a | O(a) |
+
+## Implementations
+
+### C++
+
+~~~cpp
+#include <unordered_map>
+#include <vector>
+using namespace std;
+
+vector<int> twoSum(const vector<int>& nums, int target) {
+  unordered_map<int, int> seen;
+  for (int i = 0; i < static_cast<int>(nums.size()); ++i) {
+    int need = target - nums[i];
+    if (seen.count(need)) return {seen[need], i};
+    seen[nums[i]] = i;
+  }
+  return {};
+}
+~~~
+
+### Java
+
+~~~java
+import java.util.*;
+
+int[] twoSum(int[] nums, int target) {
+  Map<Integer, Integer> seen = new HashMap<>();
+  for (int i = 0; i < nums.length; i++) {
+    int need = target - nums[i];
+    if (seen.containsKey(need)) return new int[] {seen.get(need), i};
+    seen.put(nums[i], i);
+  }
+  return new int[0];
+}
+~~~
+
+### Python
+
+~~~python
+def two_sum(nums: list[int], target: int) -> list[int]:
+    seen: dict[int, int] = {}
+    for index, value in enumerate(nums):
+        need = target - value
+        if need in seen:
+            return [seen[need], index]
+        seen[value] = index
+    return []
+~~~
+
+## Dry run
+
+For nums = [2, 7, 11, 15] and target 9, store 2:0. At 7, the required complement 2 is already stored, so the answer is [0, 1].
+
+## Common mistakes
+
+- Relying on iteration order when the language does not promise it.
+- Ignoring collision and adversarial-input worst cases.
+- Mutating a key after using it as a map key.
+
+## Interview questions
+
+- Detect whether a subarray has sum k.
+- Group anagrams.
+- Find the longest consecutive sequence.
+
+## Practice problems
+
+- Two Sum
+- Valid Anagram
+- Subarray Sum Equals K
+
+## Advanced notes
+
+Load factor controls resizing. Open addressing improves locality; chaining makes deletion simpler. Cryptographic hashes are not a substitute for a well-distributed in-memory hash function.

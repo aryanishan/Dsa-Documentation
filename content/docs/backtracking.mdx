@@ -1,0 +1,123 @@
+---
+title: Backtracking
+description: Explore a decision tree systematically, undoing choices that cannot lead to a valid solution.
+slug: backtracking
+category: Algorithms
+tags: [backtracking, recursion, search]
+order: 16
+readingTime: 9 min read
+---
+
+## Definition
+
+Backtracking is depth-first search over candidate choices. It makes a choice, recurses, then undoes that choice before trying the next branch.
+
+## Intuition
+
+Prune as soon as a partial solution violates constraints. This avoids exploring entire subtrees that cannot contain an answer.
+
+## Real-world analogy
+
+Solving a maze means choose a corridor, walk it, and return to the latest junction when it reaches a wall.
+
+## Visual explanation
+
+~~~text
+choose position for row 0
+├─ column 0 -> conflict later -> undo
+├─ column 1 -> explore next row
+└─ column 2 -> explore next row
+
+choice -> recurse -> undo
+~~~
+
+## Time complexity
+
+| Problem | Worst-case time |
+| --- | --- |
+| Subsets | O(n × 2ⁿ) including output |
+| Permutations | O(n × n!) including output |
+| N-Queens | O(n!) with pruning |
+
+## Space complexity
+
+| Resource | Space |
+| --- | --- |
+| Recursion path | O(n) |
+| Working subset/permutation | O(n) |
+| All returned solutions | Output-dependent |
+
+## Implementations
+
+### C++
+
+~~~cpp
+#include <vector>
+using namespace std;
+
+void build(int start, const vector<int>& nums, vector<int>& path,
+           vector<vector<int>>& answer) {
+  answer.push_back(path);
+  for (int i = start; i < static_cast<int>(nums.size()); ++i) {
+    path.push_back(nums[i]);
+    build(i + 1, nums, path, answer);
+    path.pop_back();
+  }
+}
+~~~
+
+### Java
+
+~~~java
+import java.util.*;
+
+void build(int start, int[] nums, List<Integer> path, List<List<Integer>> answer) {
+  answer.add(new ArrayList<>(path));
+  for (int i = start; i < nums.length; i++) {
+    path.add(nums[i]);
+    build(i + 1, nums, path, answer);
+    path.remove(path.size() - 1);
+  }
+}
+~~~
+
+### Python
+
+~~~python
+def subsets(nums: list[int]) -> list[list[int]]:
+    answer: list[list[int]] = []
+    def build(start: int, path: list[int]) -> None:
+        answer.append(path.copy())
+        for index in range(start, len(nums)):
+            path.append(nums[index])
+            build(index + 1, path)
+            path.pop()
+    build(0, [])
+    return answer
+~~~
+
+## Dry run
+
+For [1, 2], record []; choose 1 and record [1]; choose 2 and record [1,2]; undo 2, undo 1, then choose 2 and record [2].
+
+## Common mistakes
+
+- Forgetting to undo a mutation after recursion.
+- Storing the same mutable path instead of a copy.
+- Pruning branches that might still become valid.
+
+## Interview questions
+
+- Generate all valid parentheses.
+- Solve N-Queens.
+- Find a word in a board.
+
+## Practice problems
+
+- Subsets
+- Permutations
+- Combination Sum
+
+## Advanced notes
+
+Order candidates to fail early, use bitmasks for compact constraint checks, and avoid duplicate branches by sorting input and skipping equal siblings.

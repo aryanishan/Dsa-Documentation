@@ -1,0 +1,1085 @@
+---
+title: Arrays
+description: A complete, deeply explained guide to arrays — memory internals, indexing, all operations with step-by-step walkthroughs, static vs dynamic array mechanics, copying and aliasing gotchas, multi-dimensional layout, and every core interview pattern with working code.
+slug: arrays
+category: Beginner
+tags:
+  - array
+  - two-pointers
+  - prefix-sum
+  - sliding-window
+  - binary-search
+  - memory-layout
+order: 3
+readingTime: 40 min read
+---
+
+# Arrays
+
+Arrays are one of the most important data structures in programming.
+
+Almost every programming language provides arrays because they are **fast**, **simple**, and **efficient**.
+
+Before learning linked lists, trees, graphs, stacks, queues, or hash maps, every programmer should understand arrays properly — not just *what* they do, but *why* they behave the way they do. This guide goes one level deeper than the usual introduction: every claim ("access is O(1)", "insertion is O(n)", "append is amortized O(1)") is actually derived and shown, not just stated.
+
+---
+
+# Learning Objectives
+
+After completing this chapter, you will understand:
+
+- What an array is, and what "contiguous memory" actually means at the byte level
+- Why indexing starts from zero (with the actual arithmetic, not just "because")
+- Every array operation, with step-by-step diagrams for insertion and deletion
+- Why access is O(1) but insertion is O(n) — proven, not asserted
+- Static vs Dynamic arrays, including exactly how and when a dynamic array resizes
+- Why append is "amortized O(1)" — with the actual math behind that claim
+- The difference between **length/size** and **capacity**
+- Why arrays behave like references, and the bugs that causes
+- Shallow copy vs deep copy
+- How multi-dimensional arrays are actually laid out in memory
+- Why cache locality makes arrays fast in practice, not just in theory
+- Every core pattern (two pointers, sliding window, prefix sum, binary search, difference array, Kadane's algorithm, monotonic stack) with working code
+- Common mistakes and why each one actually breaks your program
+
+---
+
+# Definition
+
+An **array** is a collection of elements stored in **contiguous memory locations**.
+
+Every element has:
+
+- a value
+- an index (position)
+
+Each index points to exactly one element.
+
+Example:
+
+```text
+Index : 0   1   2   3   4
+Value : 5  12  20   8   1
+```
+
+Here,
+
+- index 0 stores value 5
+- index 1 stores value 12
+- index 2 stores value 20
+- index 3 stores value 8
+- index 4 stores value 1
+
+Instead of remembering five different variables, we store everything inside one array.
+
+Instead of
+
+```cpp
+int marks1 = 80;
+int marks2 = 85;
+int marks3 = 91;
+```
+
+we simply write
+
+```cpp
+int marks[3] = {80,85,91};
+```
+
+Much cleaner — and, importantly, this also lets us **loop** over the data, which separate variables never allow. You cannot write a `for` loop over `marks1, marks2, marks3`. You can absolutely write one over `marks[i]`.
+
+---
+
+# Why Do We Need Arrays?
+
+Imagine a class has 100 students.
+
+Without arrays:
+
+```cpp
+int s1;
+int s2;
+int s3;
+...
+int s100;
+```
+
+Managing this becomes impossible — you couldn't even write a function to compute the average, since there's no way to iterate over 100 separately named variables.
+
+Instead,
+
+```cpp
+int students[100];
+```
+
+Now every student's marks are stored together, and something like "compute the average" becomes a five-line loop instead of a hundred lines of manual addition.
+
+Arrays make programs:
+
+- easier to write
+- easier to read
+- easier to maintain
+- possible to loop over programmatically — this is the real, structural reason arrays exist, not just tidiness
+
+---
+
+# Intuition
+
+Imagine a train.
+
+Every coach is connected in order.
+
+```
+Coach 0
+Coach 1
+Coach 2
+Coach 3
+Coach 4
+```
+
+Finding Coach 3 is easy because every coach has a number.
+
+Arrays work exactly like this. Every element has its own position called an **index**, and — this is the part that's easy to skim past — the coaches are **physically coupled together**. You cannot remove Coach 2 without uncoupling and recoupling every coach after it. That physical coupling is the entire reason insertion and deletion cost more than access. Keep this picture in mind; we'll come back to it.
+
+---
+
+# What Does Contiguous Memory Mean? (The part most explanations skip)
+
+This is the most important concept in the whole topic, so let's be fully precise about it.
+
+Computer memory (RAM) can be thought of as one enormous row of numbered boxes, called **bytes**, each with its own address — `0`, `1`, `2`, `3`, and so on, up to billions.
+
+A single `int` typically takes up **4 bytes**. A `double` typically takes up **8 bytes**. A `char` takes up **1 byte**. This size is called the **element size** or **stride**.
+
+When you declare an array of integers, the computer doesn't scatter the four integers randomly across memory. It finds **one unbroken block of memory** big enough for all of them and places them one after another, with **zero gaps**.
+
+Suppose the first integer is stored at memory address
+
+```
+1000
+```
+
+Since each `int` takes 4 bytes, the next integer is **not** at `1001` — it's at
+
+```
+1004
+```
+
+then
+
+```
+1008
+```
+
+then
+
+```
+1012
+```
+
+Memory looks like this:
+
+```text
+Address   Content
+
+1000  →   10
+1004  →   20
+1008  →   30
+1012  →   40
+1016  →   50
+```
+
+Notice: `1000, 1004, 1008, 1012, 1016` — each address jumps by exactly 4, because that's the size of an `int`. There are **no gaps** between elements. This is called **contiguous memory**, and it is the single fact that everything else in this guide follows from.
+
+**If the element type were `double` (8 bytes) instead of `int` (4 bytes)**, the same array would be laid out as `1000, 1008, 1016, 1024, 1032` — the gap between addresses always equals the element size, whatever that size happens to be.
+
+---
+
+# Why Does Index Start From Zero? (The actual arithmetic)
+
+Because elements are packed with no gaps, the address of *any* element can be computed directly with one formula:
+
+```
+address(index) = base_address + index × element_size
+```
+
+This is not a coincidence or a convention someone picked for fun — it's the natural consequence of contiguous storage. Let's verify it.
+
+Suppose
+
+```
+Base Address = 1000
+Element Size = 4  (an int)
+```
+
+Index 0:
+
+```
+1000 + 0 × 4 = 1000   ✅ matches the first element
+```
+
+Index 1:
+
+```
+1000 + 1 × 4 = 1004   ✅ matches the second element
+```
+
+Index 4:
+
+```
+1000 + 4 × 4 = 1016   ✅ matches the fifth element
+```
+
+Now here's the part most tutorials never show you: **watch what happens if indexing started at 1 instead of 0.** To find the address of the "1st" element (which is really the first element), the formula would need to be:
+
+```
+address(index) = base_address + (index − 1) × element_size
+```
+
+That extra `− 1` subtraction has to happen on **every single array access, every single time**, forever. Zero-based indexing exists specifically so that this formula stays as simple as possible — one multiplication and one addition, nothing more. This convention traces back to the C language, where an array index is literally defined as an *offset* from the base address (0 elements away, 1 element away, 2 elements away...), and virtually every modern language inherited it from C.
+
+---
+
+# Visual Explanation
+
+```text
+Index
+
+0     1     2     3     4
+
++-----+-----+-----+-----+-----+
+| 10  | 20  | 30  | 40  | 50  |
++-----+-----+-----+-----+-----+
+
+Base Address
+     ↓
+1000 1004 1008 1012 1016
+```
+
+---
+
+# Declaring Arrays
+
+### C++
+
+```cpp
+int arr[5];              // uninitialized array of size 5, garbage values
+int arr[5] = {1,2,3,4,5}; // initialized
+```
+
+A C-style array like this is allocated on the **stack**, and its size is fixed at compile time — the compiler literally reserves that many contiguous bytes for it and nothing more.
+
+---
+
+### Java
+
+```java
+int[] arr = {1,2,3,4,5};
+```
+
+In Java, arrays are objects allocated on the **heap**, and every array knows its own length via `arr.length` — you never have to track the size separately the way you sometimes do in C++.
+
+---
+
+### Python
+
+```python
+arr = [1,2,3,4,5]
+```
+
+Python's `list` behaves like a dynamic array, but it's worth knowing what it actually is under the hood: a Python list does **not** store the integers `1,2,3,4,5` contiguously in the way a C++ `int[]` does. It stores **contiguous pointers/references** to separate Python integer objects that can live anywhere in memory. This is why a Python list can hold mixed types (`[1, "hi", 3.5]`) — every "slot" in the contiguous block is just a fixed-size reference, and the reference always points somewhere else for the actual value. This also means Python lists don't get the *full* cache-locality benefit that a true C++ array of primitives gets, because following each pointer can jump to a scattered location. NumPy arrays, by contrast, store actual raw numbers contiguously (like C++ arrays do), which is exactly why NumPy is so much faster than plain Python lists for numeric work.
+
+Python also supports **negative indexing**, which C++ and Java do not:
+
+```python
+arr = [10, 20, 30, 40]
+print(arr[-1])   # 40 — last element
+print(arr[-2])   # 30 — second-to-last element
+```
+
+This is just syntactic sugar; internally, `arr[-1]` is translated to `arr[len(arr) - 1]`.
+
+---
+
+# Traversing an Array
+
+Traversal means visiting every element exactly once.
+
+**Index-based traversal:**
+
+```cpp
+for(int i=0;i<n;i++)
+{
+    cout<<arr[i];
+}
+```
+
+**For-each / range-based traversal** (use this when you don't need the index itself):
+
+```cpp
+for(int x : arr)
+{
+    cout<<x;
+}
+```
+
+**Reverse traversal:**
+
+```cpp
+for(int i=n-1;i>=0;i--)
+{
+    cout<<arr[i];
+}
+```
+
+Output of forward traversal on `{1,2,3,4,5}`:
+
+```
+1
+2
+3
+4
+5
+```
+
+**Why is traversal O(n)?** Because the loop body runs exactly once for each of the `n` elements, and the work inside the loop (printing, or reading `arr[i]`) is O(1) each time. Total work = `n × O(1) = O(n)`. This is the pattern to notice for *every* complexity calculation in this guide: multiply "how many times does this run" by "how much work per run."
+
+---
+
+# Accessing an Element
+
+Example
+
+```cpp
+cout<<arr[3];
+```
+
+Output
+
+```
+40
+```
+
+**Why is this O(1) and not O(n)?** Go back to the address formula: `address = base + index × size`. The computer plugs `index = 3` into that formula, gets a number, and jumps straight there — it never has to look at `arr[0]`, `arr[1]`, or `arr[2]` first. One multiplication, one addition, one memory fetch. That's constant work, regardless of whether the array has 5 elements or 5 million. This is precisely why arrays are chosen whenever fast lookup-by-position matters.
+
+Time Complexity: `O(1)`.
+
+---
+
+# Updating an Element
+
+Suppose
+
+```text
+10 20 30 40
+```
+
+Update
+
+```cpp
+arr[2]=100;
+```
+
+Now
+
+```text
+10 20 100 40
+```
+
+Same reasoning as access: the address of index 2 is computed directly, and the value there is simply overwritten. No other element is touched or moved.
+
+Time Complexity: `O(1)`.
+
+---
+
+# Searching an Element (Linear Search)
+
+Example
+
+```text
+10 30 40 20
+```
+
+Find `20`.
+
+Since the array is **unsorted**, there is no shortcut — the computer has no way to know where `20` is without checking. It must check elements one at a time, in order:
+
+```
+Check index 0 → 10 ❌
+Check index 1 → 30 ❌
+Check index 2 → 40 ❌
+Check index 3 → 20 ✅ found at index 3
+```
+
+**Worst case:** the target is the very last element, or isn't in the array at all — every single element gets checked once. That's `n` checks for `n` elements.
+
+Time Complexity: `O(n)`.
+
+```python
+def linear_search(arr, target):
+    for i in range(len(arr)):
+        if arr[i] == target:
+            return i
+    return -1
+```
+
+---
+
+# Searching a Sorted Array (Binary Search) — why it's O(log n)
+
+If the array is **sorted**, we can do dramatically better than checking every element, because a sorted array lets us eliminate **half** the remaining possibilities with every single comparison.
+
+The idea: check the middle element.
+- If it equals the target, done.
+- If the target is smaller, the answer (if it exists) *must* be in the left half — the right half can be thrown away entirely, since it's all bigger than the middle.
+- If the target is bigger, the answer must be in the right half — throw away the left half.
+
+```python
+def binary_search(arr, target):
+    low, high = 0, len(arr) - 1
+    while low <= high:
+        mid = low + (high - low) // 2   # avoids overflow vs (low+high)//2
+        if arr[mid] == target:
+            return mid
+        elif arr[mid] < target:
+            low = mid + 1
+        else:
+            high = mid - 1
+    return -1
+```
+
+**Why is this O(log n)?** Each comparison cuts the search space in half. Starting from `n` elements:
+
+```
+n → n/2 → n/4 → n/8 → ... → 1
+```
+
+The number of times you can divide `n` by 2 before reaching 1 is, by definition, `log₂(n)`. For example, searching a sorted array of 1,000,000 elements takes at most about **20 comparisons** (`2^20 ≈ 1,048,576`) — compare that to linear search, which could need all 1,000,000 checks in the worst case. This is why sorting an array first (`O(n log n)`) is often worth it if you'll be searching it many times afterward.
+
+---
+
+# Insertion — Full Step-by-Step Walkthrough
+
+This is one of the parts most explanations gloss over, so let's slow down and actually watch every shift happen.
+
+Suppose
+
+```text
+Index:  0    1    2    3
+Value: 10   20   40   50
+```
+
+We want to **insert 30 at index 2**, so the final array should read `10 20 30 40 50`.
+
+Because there is no gap at index 2 to put 30 into — index 2 currently holds 40 — we must first create a gap by shifting every element from index 2 onward one position to the right, **starting from the end and working backward** (this order matters, or you'd overwrite data before copying it):
+
+**Step 1:** Shift the last element (50 at index 3) into the new empty slot at index 4:
+
+```text
+10   20   40   50   _
+```
+
+**Step 2:** Shift the element now at index 2 (40) into index 3:
+
+```text
+10   20   40   40   50
+                ↑ index 2 is about to be overwritten, so this is safe
+```
+
+Wait — let's be careful and show this with actual index labels instead, since that's where confusion usually happens:
+
+```text
+Before:        [10] [20] [40] [50] [ _ ]
+                 0    1    2    3    4
+
+Shift index 3 → index 4:
+               [10] [20] [40] [50] [50]
+                 0    1    2    3    4
+
+Shift index 2 → index 3:
+               [10] [20] [40] [40] [50]
+                 0    1    2    3    4
+
+Place 30 into index 2:
+               [10] [20] [30] [40] [50]
+                 0    1    2    3    4
+```
+
+Final result: `10 20 30 40 50` — exactly what we wanted.
+
+```python
+def insert_at(arr, index, value):
+    arr.append(None)              # make room for one more element
+    for i in range(len(arr) - 1, index, -1):   # shift right, from the end backward
+        arr[i] = arr[i - 1]
+    arr[index] = value
+    return arr
+```
+
+**Why is this O(n)?** In the worst case (inserting at index 0), *every* existing element has to shift — that's `n` moves. Even inserting near the middle still shifts roughly `n/2` elements, and dropping constant factors, `n/2` is still `O(n)`.
+
+---
+
+# Deletion — Full Step-by-Step Walkthrough
+
+Suppose
+
+```text
+Index:  0    1    2    3    4
+Value: 10   20   30   40   50
+```
+
+Delete the value at index 1 (`20`). Everything after index 1 must shift **left** by one to close the gap, this time working **forward** from the deleted index:
+
+```text
+Before:              [10] [20] [30] [40] [50]
+                        0    1    2    3    4
+
+Shift index 2 → index 1:
+                     [10] [30] [30] [40] [50]
+                        0    1    2    3    4
+
+Shift index 3 → index 2:
+                     [10] [30] [40] [40] [50]
+                        0    1    2    3    4
+
+Shift index 4 → index 3:
+                     [10] [30] [40] [50] [50]
+                        0    1    2    3    4
+
+Drop the now-duplicated last slot:
+                     [10] [30] [40] [50]
+```
+
+Final result: `10 30 40 50`.
+
+```python
+def delete_at(arr, index):
+    for i in range(index, len(arr) - 1):   # shift left, starting at the deleted index
+        arr[i] = arr[i + 1]
+    arr.pop()   # remove the now-duplicated last element
+    return arr
+```
+
+Time Complexity: `O(n)`, for the same reason as insertion — up to `n − 1` elements may need to move.
+
+---
+
+# Static vs Dynamic Arrays
+
+## Static Array
+
+Size is fixed at creation and cannot change, ever.
+
+```cpp
+int arr[100];
+```
+
+This can never become size `101`. If you need more room, you must create an entirely new, bigger array yourself and copy everything over manually — the language gives you no help.
+
+## Dynamic Array
+
+Examples: `vector` (C++), `ArrayList` (Java), `list` (Python).
+
+A dynamic array can grow, but it's important to understand it is still, underneath, built on top of a plain fixed-size block of memory — it just **manages the resizing for you automatically**.
+
+### Length vs. Capacity — the distinction almost every beginner misses
+
+A dynamic array tracks **two separate numbers**:
+
+- **length (or size):** how many elements are actually stored right now.
+- **capacity:** how much space is currently reserved in memory, which is usually *larger* than length, to leave room to grow without immediately needing to resize again.
+
+```text
+length = 4         capacity = 8
+
+[10] [20] [30] [40] [ ] [ ] [ ] [ ]
+ 0    1    2    3    4   5   6   7
+                       ↑ unused, but already reserved
+```
+
+Appending here (`length < capacity`) is simply: write the new value into the first free slot, then increment `length`. No copying, no shifting — this is why append is cheap *most* of the time.
+
+### What happens exactly when capacity runs out
+
+When `length == capacity` and you append one more element, the dynamic array must:
+
+1. Allocate a brand-new, larger block of memory — typically **double** the old capacity.
+2. Copy every existing element from the old block into the new block, one by one.
+3. Free the old block.
+4. Only now insert the new element.
+
+```text
+Old block (capacity 4, full):
+[10] [20] [30] [40]
+
+Step 1 — allocate new block of capacity 8:
+[ ] [ ] [ ] [ ] [ ] [ ] [ ] [ ]
+
+Step 2 — copy all 4 old elements over:
+[10] [20] [30] [40] [ ] [ ] [ ] [ ]
+
+Step 3 — free the old block of 4.
+
+Step 4 — insert the new element (say, 50):
+[10] [20] [30] [40] [50] [ ] [ ] [ ]
+```
+
+This single append just cost `O(n)` because of the copy — far more expensive than a normal append.
+
+### Why we still call append "O(1) amortized" — the actual math
+
+This is the part almost every explanation states without proving. Here's the proof, in plain terms.
+
+Say we start with capacity 1 and double every time we run out, appending `n` elements total. The resizes happen when the array holds `1, 2, 4, 8, 16, ...` elements. The cost of each resize (the copying) equals the array's size at that moment. So the total copying cost across the *entire* sequence of `n` appends is:
+
+```
+1 + 2 + 4 + 8 + ... + n  (up to the largest power of 2 ≤ n)
+```
+
+This is a geometric series, and geometric series like this sum to **less than 2n**:
+
+```
+1 + 2 + 4 + ... + n  <  2n
+```
+
+So across `n` total appends, the total resizing cost is at most `2n`. Dividing that total cost by the `n` appends gives an **average cost per append of at most 2** — a constant, independent of `n`. That averaged-out constant cost is exactly what "amortized O(1)" means: any *individual* append might cost O(n) if it happens to trigger a resize, but spread evenly across a long sequence of appends, the average cost per append is O(1).
+
+**Why double instead of, say, always adding a fixed +10 slots each time?** If you grew by a fixed amount each time, you'd need `n / 10` resizes total to reach size `n`, and each resize costs roughly the array's current size — the total copying cost becomes proportional to `n²`, making the *average* cost per append `O(n)`, not O(1). Doubling (multiplying capacity, not adding a constant) is the specific design choice that keeps the number of resizes down to only `O(log n)` while keeping the amortized cost constant.
+
+---
+
+# Arrays Are References — a bug you will absolutely run into
+
+This is left out of most beginner material entirely, and it causes real bugs.
+
+In Java, Python, and JavaScript, when you assign one array variable to another, you are **not** copying the array — you're copying a reference (a pointer) to the *same* underlying array.
+
+```python
+a = [1, 2, 3]
+b = a           # b now points to the SAME array as a, not a copy
+b[0] = 999
+print(a)        # [999, 2, 3]  <-- a changed too!
+```
+
+This also affects function calls: passing an array into a function passes a reference, so if the function modifies the array's contents, the caller's array changes too — even though nothing was explicitly "returned."
+
+```python
+def zero_out_first(arr):
+    arr[0] = 0
+
+nums = [5, 6, 7]
+zero_out_first(nums)
+print(nums)   # [0, 6, 7] -- the original was mutated
+```
+
+C++ arrays and `std::vector` behave differently by default when passed to functions (they're copied unless you explicitly pass by reference with `&`), so the exact behavior depends on the language — but the underlying lesson is universal: **always know whether you're working with the same array or a copy of it.**
+
+---
+
+# Copying Arrays: Shallow Copy vs. Deep Copy
+
+To actually get an independent copy, you need to copy explicitly:
+
+```python
+a = [1, 2, 3]
+b = a.copy()     # or list(a), or a[:]
+b[0] = 999
+print(a)         # [1, 2, 3]  -- unaffected now
+```
+
+But there's a second trap: `a.copy()` is a **shallow copy**. If the array holds objects or nested lists (not simple numbers), the *outer* list is copied, but the inner objects are still shared:
+
+```python
+a = [[1, 2], [3, 4]]
+b = a.copy()
+b[0][0] = 999
+print(a)   # [[999, 2], [3, 4]]  -- the nested list is STILL shared!
+```
+
+To get a fully independent copy of nested structures, you need a **deep copy**:
+
+```python
+import copy
+b = copy.deepcopy(a)
+```
+
+The rule of thumb: shallow copy duplicates the top-level container only; deep copy recursively duplicates everything inside it too.
+
+---
+
+# Multi-Dimensional Arrays
+
+A 2D array (matrix) is an array of arrays, commonly used for grids, tables, and images.
+
+```python
+grid = [
+    [1, 2, 3],
+    [4, 5, 6],
+    [7, 8, 9],
+]
+print(grid[1][2])   # row 1, column 2 -> 6
+```
+
+### How this is actually laid out in memory
+
+You might picture a 2D array as a literal grid in memory, but true contiguous 2D arrays (like in C++) are still stored as **one single flat row** underneath, using one of two layouts:
+
+**Row-major order** (used by C, C++, Java, and Python's nested lists): all of row 0 is stored first, then all of row 1, then all of row 2:
+
+```text
+Logical grid:            Actual memory (row-major):
+[1 2 3]
+[4 5 6]        →         1  2  3  4  5  6  7  8  9
+[7 8 9]
+```
+
+**Column-major order** (used by Fortran and some numerical/scientific libraries): all of column 0 is stored first, then column 1, then column 2:
+
+```text
+Logical grid:            Actual memory (column-major):
+[1 2 3]
+[4 5 6]        →         1  4  7  2  5  8  3  6  9
+[7 8 9]
+```
+
+**Why does this matter?** Looping through a row-major array row-by-row visits memory addresses in sequential order — maximizing cache locality (explained below). Looping the *other* direction (column-by-column on a row-major array) jumps around memory unpredictably, and can be dramatically slower in practice even though the Big-O complexity ("visit every cell once") is identical either way. This is a great example of Big-O not capturing everything that affects real-world speed.
+
+---
+
+# Cache Locality — the technical reason arrays are fast in practice
+
+You'll often hear "arrays are cache-friendly" stated as a fact without explanation. Here's what's actually happening.
+
+Modern CPUs don't fetch memory one byte at a time from RAM — RAM is comparatively slow to access. Instead, the CPU has a small, very fast memory called **cache**, and whenever it needs to read one memory address, it pulls in an entire nearby chunk at once, called a **cache line** (commonly 64 bytes), on the bet that nearby data will be needed soon too.
+
+Because array elements are stored contiguously, reading `arr[0]` often pulls `arr[1]`, `arr[2]`, and more into the fast cache automatically, *for free*, as a side effect. So when your loop reaches `arr[1]` a moment later, it's already sitting in fast cache — no slow trip to RAM needed. This is called **spatial locality**, and sequential array traversal is basically the textbook case that benefits from it.
+
+Linked lists don't get this benefit at all, because each node can be allocated anywhere in memory — there's no guarantee the next node is anywhere near the current one, so the CPU can't usefully prefetch it. This is exactly why an array-based structure frequently outperforms a linked list *in practice*, even in situations where both have identical Big-O complexity on paper. Big-O complexity counts operations, not real-world wall-clock time, and cache behavior is a huge, invisible-to-Big-O factor.
+
+---
+
+# Time Complexity
+
+| Operation | Static Array | Dynamic Array |
+|------------|-------------|---------------|
+| Access | O(1) | O(1) |
+| Update | O(1) | O(1) |
+| Search (unsorted) | O(n) | O(n) |
+| Search (sorted, binary search) | O(log n) | O(log n) |
+| Append at end | Not Possible | O(1) amortized |
+| Insert at front | O(n) | O(n) |
+| Insert in middle | O(n) | O(n) |
+| Delete | O(n) | O(n) |
+
+---
+
+# Space Complexity
+
+| Technique | Extra Space | Why |
+|------------|-------|------|
+| In-place (two pointers) | O(1) | Reuses the original array, no extra structure |
+| Prefix Sum | O(n) | Needs one extra array of running totals |
+| Frequency Array / Hash Map | O(n) | One entry per distinct value seen |
+| Auxiliary Array (e.g. merge step) | O(n) | Needs a second array to build the result into |
+
+---
+
+# Implementations
+
+## C++
+
+```cpp
+vector<int> arr = {10,20,30,40};
+
+for(int x:arr)
+    cout<<x<<" ";
+```
+
+## Java
+
+```java
+int[] arr={10,20,30,40};
+
+for(int num:arr)
+    System.out.print(num+" ");
+```
+
+## Python
+
+```python
+arr=[10,20,30,40]
+
+for num in arr:
+    print(num)
+```
+
+---
+
+# Dry Run: Traversal
+
+Given
+
+```
+arr=[5,8,2,9]
+```
+
+| Step | Index | Value |
+|------|-------|-------|
+| 1 | 0 | 5 |
+| 2 | 1 | 8 |
+| 3 | 2 | 2 |
+| 4 | 3 | 9 |
+
+Traversal completed after 4 steps — matches `n = 4`, confirming O(n).
+
+---
+
+# Dry Run: Binary Search
+
+Given `arr = [2, 5, 8, 12, 16, 23, 38, 45]`, find `target = 23`.
+
+| Step | low | high | mid | arr[mid] | Comparison | Action |
+|------|-----|------|-----|----------|------------|--------|
+| 1 | 0 | 7 | 3 | 12 | 12 < 23 | search right half: low = 4 |
+| 2 | 4 | 7 | 5 | 23 | 23 == 23 | **found at index 5** |
+
+Only **2 comparisons** were needed for an 8-element array — compare that to a linear search, which could need up to 8.
+
+---
+
+# Common Array Patterns (with working code)
+
+## 1. Two Pointers
+
+Use two index variables, typically moving from opposite ends inward, to avoid a nested loop. Requires the array to be sorted (or a comparison that works regardless of order).
+
+```python
+def two_sum_sorted(values, target):
+    left, right = 0, len(values) - 1
+    while left < right:
+        total = values[left] + values[right]
+        if total == target:
+            return [left, right]
+        elif total < target:
+            left += 1    # sum too small, need a bigger value -> move left pointer up
+        else:
+            right -= 1   # sum too big, need a smaller value -> move right pointer down
+    return []
+```
+
+Why this beats a nested loop: a brute-force check of every pair is `O(n²)`. Because the array is sorted, moving `left` up always increases the sum and moving `right` down always decreases it — so each pointer only ever needs to move in one direction across the whole array, giving `O(n)` total.
+
+## 2. Sliding Window
+
+Maintain a window defined by two pointers that only ever move forward, to avoid recomputing a sum from scratch for every possible subarray.
+
+```python
+def max_sum_fixed_window(values, k):
+    window_sum = sum(values[:k])
+    best = window_sum
+    for i in range(k, len(values)):
+        window_sum += values[i] - values[i - k]   # add the new right edge, drop the old left edge
+        best = max(best, window_sum)
+    return best
+```
+
+Without this trick, computing the sum of every window of size `k` from scratch would cost `O(n × k)`. By reusing the previous window's sum and just adjusting for the one element that entered and the one that left, each step becomes O(1), for O(n) total.
+
+## 3. Prefix Sums
+
+Precompute cumulative sums once, so any range sum afterward is instant.
+
+```python
+def build_prefix_sums(values):
+    prefix = [0] * (len(values) + 1)
+    for i, v in enumerate(values):
+        prefix[i + 1] = prefix[i] + v
+    return prefix
+
+def range_sum(prefix, i, j):
+    # inclusive sum of values[i..j]
+    return prefix[j + 1] - prefix[i]
+```
+
+`prefix[k]` stores the sum of all elements *before* index `k`. The sum of any range `[i, j]` is then just "everything up to j" minus "everything up to i" — one subtraction, O(1), no matter how large the range is. Building the prefix array costs O(n) once; every query after that is O(1) instead of O(range length).
+
+## 4. Difference Array (the reverse trick of prefix sums)
+
+Useful when you need to apply **many range updates** (e.g., "add 5 to every element from index 2 to index 6") efficiently, rather than many range *queries*.
+
+```python
+def apply_range_update(diff, i, j, value):
+    diff[i] += value
+    if j + 1 < len(diff):
+        diff[j + 1] -= value
+
+def build_final_array(diff):
+    result = [0] * len(diff)
+    result[0] = diff[0]
+    for i in range(1, len(diff)):
+        result[i] = result[i - 1] + diff[i]
+    return result
+```
+
+Instead of looping through the whole range `[i, j]` to add `value` to each element (O(range length) per update), you mark only the two endpoints in a "difference array" — O(1) per update — and recover the real array with a single prefix-sum pass at the very end.
+
+## 5. Kadane's Algorithm (Maximum Subarray Sum)
+
+Finds the maximum sum of any contiguous subarray in one O(n) pass.
+
+```python
+def max_subarray_sum(values):
+    best = values[0]
+    current = values[0]
+    for v in values[1:]:
+        current = max(v, current + v)   # either extend the previous run, or start fresh here
+        best = max(best, current)
+    return best
+```
+
+The key idea: `current` tracks "the best sum of a subarray that *ends exactly here*." At each element, we ask: is it better to extend the previous run by adding this element, or is the previous run actually dragging us down (negative), so it's better to just start over from this element alone? Because we only ever look at the current element and the answer for the position just before it, this avoids checking all `O(n²)` possible subarrays entirely.
+
+## 6. Monotonic Stack (brief introduction)
+
+A monotonic stack keeps its elements in strictly increasing or decreasing order at all times, and is the standard tool for "next greater element" style problems.
+
+```python
+def next_greater_elements(values):
+    result = [-1] * len(values)
+    stack = []   # stores indices, values at those indices stay in decreasing order
+    for i, v in enumerate(values):
+        while stack and values[stack[-1]] < v:
+            result[stack.pop()] = v   # v is the "next greater element" for this popped index
+        stack.append(i)
+    return result
+```
+
+Each index is pushed once and popped at most once, so despite the nested-looking `while` loop inside a `for` loop, the total work across the *entire* run is O(n), not O(n²) — a subtlety worth sitting with, since it looks like it should be quadratic at first glance.
+
+---
+
+# Real-World Applications
+
+Arrays are used everywhere:
+
+- Student marks / grade records
+- Monthly salary records
+- Temperature readings over time
+- Image pixels (a 2D array of color values)
+- Audio samples (a 1D array of amplitude values over time)
+- Video frames (an array of images, each of which is a 2D array)
+- Game boards (chess, tic-tac-toe, Sudoku — all 2D arrays)
+- Browser history (an array-like stack of visited pages)
+- Sensor readings in embedded systems
+
+---
+
+# Advantages
+
+- Fast random access — O(1), thanks to direct address calculation
+- Cache-friendly — contiguous memory plays to how CPU caches actually work
+- Easy, predictable traversal
+- Simple to implement and reason about
+- Low memory overhead compared to structures that need extra pointers per element (like linked lists)
+
+# Disadvantages
+
+- Fixed size for static arrays — can't grow without creating a new array
+- Slow insertion/deletion away from the end — O(n) due to shifting
+- Some memory wastage in dynamic arrays, since capacity is usually kept larger than the actual length
+- Costly to search for a value (unless sorted) — no shortcut without checking each element
+
+---
+
+# Common Mistakes (and why each one actually breaks things)
+
+**❌ Accessing an index outside the array bounds**
+
+```cpp
+arr[10]   // when size is only 5
+```
+
+In C++, this is **undefined behavior** — it might silently read garbage memory, corrupt other data, or crash, and the behavior can differ between runs. In Java and Python, it instead throws a clear exception (`ArrayIndexOutOfBoundsException` / `IndexError`) — which is *safer*, because it fails loudly instead of silently corrupting memory.
+
+**❌ Mixing one-based and zero-based indexing**
+
+Easy to do when translating a problem statement that says "the 3rd element" — remember that's index `2`, not `3`.
+
+**❌ Forgetting array size / confusing length with capacity**
+
+Especially relevant with dynamic arrays: `len(arr)` tells you how many elements are actually there; it says nothing about how much memory is reserved underneath.
+
+**❌ Using binary search on an unsorted array**
+
+Binary search's entire correctness depends on being able to discard half the array based on one comparison — that only works if the array is sorted. On unsorted data it will silently return wrong answers (or fail to find an existing element) without any error.
+
+**❌ Assuming arrays are automatically copied when assigned or passed to functions**
+
+As shown above, in Python/Java/JS, `b = a` shares the same underlying array. Mutating `b` mutates `a`. This is one of the most common real-world sources of "why did my other variable change?!" bugs.
+
+**❌ Forgetting integer overflow in prefix sums or midpoint calculations**
+
+`(low + high) / 2` can overflow for very large indices in fixed-width integer languages; `low + (high - low) / 2` avoids that by never letting the intermediate sum exceed the range of the values involved.
+
+---
+
+# Interview Questions
+
+- What is an array, and why is contiguous memory the key property that defines it?
+- Why is access O(1) but insertion O(n)? Derive both, don't just state them.
+- Why is append "amortized O(1)" instead of just O(1)? Prove it.
+- What's the difference between static and dynamic arrays?
+- Why does indexing start from zero?
+- What's the difference between an array's length and its capacity?
+- What is cache locality, and why does it make arrays faster than linked lists in practice?
+- What's the difference between a shallow copy and a deep copy?
+- Why can't binary search be used on an unsorted array?
+- How would you efficiently apply many range updates to an array? (difference array)
+- Explain how Kadane's algorithm avoids checking all O(n²) subarrays.
+
+---
+
+# Practice Problems
+
+**Easy**
+- Two Sum
+- Remove Duplicates from Sorted Array
+- Merge Sorted Array
+- Maximum Subarray (Kadane's Algorithm)
+
+**Medium**
+- Product of Array Except Self
+- Rotate Array
+- Container With Most Water
+- Next Permutation
+- Subarray Sum Equals K (prefix sum + hash map)
+
+**Hard**
+- Trapping Rain Water
+- First Missing Positive
+- Sliding Window Maximum (monotonic deque)
+
+---
+
+# Advanced Notes
+
+Arrays benefit from **cache locality**: consecutive elements sit next to each other in memory, so modern CPUs load nearby elements into fast cache automatically, making sequential traversal much faster in practice than pointer-chasing structures like linked lists, even when both have the same Big-O complexity.
+
+Many advanced interview techniques are built directly on the foundations covered in this guide:
+
+- Two Pointers — for sorted-array pair problems
+- Sliding Window — for contiguous-subarray problems
+- Prefix Sum — for fast range-sum *queries*
+- Difference Array — for fast range *updates*
+- Kadane's Algorithm — for maximum-subarray-sum problems
+- Binary Search — for O(log n) lookups on sorted data
+- Monotonic Stack / Monotonic Queue — for "next greater/smaller element" and windowed-extremum problems
+
+Mastering the *mechanics* behind arrays — not just the vocabulary, but the actual memory arithmetic, the resizing math, and the reference-vs-copy behavior — makes every one of these advanced techniques far easier to learn, because you'll already understand *why* they work instead of just memorizing that they do.
+
+---
+
+# Summary
+
+An array is a contiguous collection of elements that allows fast, direct, index-based access via simple address arithmetic (`base + index × size`). This one property is the root cause of everything else true about arrays: O(1) access, O(n) insertion/deletion (because of shifting), amortized O(1) append in dynamic arrays (because of geometric-growth resizing), and superior real-world performance from cache locality. Understanding *why* each of these facts is true — not just memorizing that they are — is what makes arrays the right foundation before moving on to linked lists, stacks, queues, hash maps, trees, and graphs.

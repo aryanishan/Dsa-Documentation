@@ -1,0 +1,127 @@
+---
+title: Segment Trees
+description: Support fast range queries and point or range updates with a hierarchical interval tree.
+slug: segment-trees
+category: Advanced Data Structures
+tags: [segment-tree, range-query, tree]
+order: 18
+readingTime: 11 min read
+---
+
+## Definition
+
+A segment tree is a binary tree over array intervals. Each node stores an aggregate such as sum, minimum, maximum, or gcd for its segment.
+
+## Intuition
+
+Split a range query into a small number of stored intervals. An update changes one leaf and recomputes only its ancestors.
+
+## Real-world analogy
+
+A dashboard can show sales for any date range by combining precomputed totals for nested calendar blocks instead of adding every day.
+
+## Visual explanation
+
+~~~text
+array: [2, 1, 3, 4]
+             [0..3]=10
+          /             \
+     [0..1]=3          [2..3]=7
+      /     \           /     \
+      2       1         3       4
+~~~
+
+## Time complexity
+
+| Operation | Segment tree |
+| --- | --- |
+| Build | O(n) |
+| Range query | O(log n) |
+| Point update | O(log n) |
+| Lazy range update/query | O(log n) |
+
+## Space complexity
+
+| Representation | Space |
+| --- | --- |
+| Array-backed segment tree | O(n), commonly 4n allocated |
+| Recursive call stack | O(log n) |
+
+## Implementations
+
+### C++
+
+~~~cpp
+#include <vector>
+using namespace std;
+
+struct SegTree {
+  int n; vector<int> tree;
+  SegTree(vector<int> a) : n(a.size()), tree(4 * n) { build(a, 1, 0, n - 1); }
+  void build(vector<int>& a, int p, int l, int r) {
+    if (l == r) { tree[p] = a[l]; return; }
+    int m = (l + r) / 2; build(a, p*2, l, m); build(a, p*2+1, m+1, r);
+    tree[p] = tree[p*2] + tree[p*2+1];
+  }
+};
+~~~
+
+### Java
+
+~~~java
+class SegTree {
+  int[] tree; int n;
+  SegTree(int[] values) { n = values.length; tree = new int[4 * n]; build(values, 1, 0, n - 1); }
+  void build(int[] values, int p, int left, int right) {
+    if (left == right) { tree[p] = values[left]; return; }
+    int mid = (left + right) / 2;
+    build(values, p * 2, left, mid); build(values, p * 2 + 1, mid + 1, right);
+    tree[p] = tree[p * 2] + tree[p * 2 + 1];
+  }
+}
+~~~
+
+### Python
+
+~~~python
+class SegTree:
+    def __init__(self, values: list[int]) -> None:
+        self.n = len(values)
+        self.tree = [0] * (4 * self.n)
+        self._build(values, 1, 0, self.n - 1)
+
+    def _build(self, values: list[int], p: int, left: int, right: int) -> None:
+        if left == right:
+            self.tree[p] = values[left]
+            return
+        mid = (left + right) // 2
+        self._build(values, p * 2, left, mid)
+        self._build(values, p * 2 + 1, mid + 1, right)
+        self.tree[p] = self.tree[p * 2] + self.tree[p * 2 + 1]
+~~~
+
+## Dry run
+
+For range sum [1..3] of [2,1,3,4], take the stored node for [2..3] with sum 7 and the leaf [1] with sum 1, yielding 8.
+
+## Common mistakes
+
+- Mixing inclusive and half-open interval conventions.
+- Allocating too little tree storage.
+- Forgetting to propagate lazy values before descending.
+
+## Interview questions
+
+- Support range minimum queries with updates.
+- Count smaller numbers after self.
+- Maintain mutable range sums.
+
+## Practice problems
+
+- Range Sum Query - Mutable
+- My Calendar III
+- Falling Squares
+
+## Advanced notes
+
+Fenwick trees are simpler for prefix-sum-like operations. Lazy propagation handles range updates; persistent segment trees retain historical versions; merge sort trees answer order-statistic variants.

@@ -1,0 +1,122 @@
+---
+title: Dynamic Programming
+description: Solve overlapping subproblems by storing results and building optimal solutions from smaller states.
+slug: dynamic-programming
+category: Algorithms
+tags: [dynamic-programming, memoization, optimization]
+order: 15
+readingTime: 12 min read
+---
+
+## Definition
+
+Dynamic programming (DP) stores answers to overlapping subproblems, using memoization (top-down) or tabulation (bottom-up).
+
+## Intuition
+
+Define a state containing exactly the information needed for the future, write a recurrence, establish base cases, then compute each state once.
+
+## Real-world analogy
+
+Planning the cheapest trip through several stops is easier when you remember the cheapest known cost to each stop instead of recomputing every route.
+
+## Visual explanation
+
+~~~text
+coin change amount 5, coins [1,2,5]
+dp[0] = 0
+dp[1] = dp[0] + 1
+dp[2] = min(dp[1], dp[0]) + 1
+...
+dp[5] = 1 using coin 5
+~~~
+
+## Time complexity
+
+| Problem | States | Time |
+| --- | --- | --- |
+| Coin change | amount | O(amount × coins) |
+| 0/1 knapsack | n × capacity | O(n × capacity) |
+| Fibonacci | n | O(n) |
+
+## Space complexity
+
+| Technique | Space |
+| --- | --- |
+| Full table | O(number of states) |
+| Rolling array where valid | O(previous row) |
+| Memoization call stack | O(recursion depth) |
+
+## Implementations
+
+### C++
+
+~~~cpp
+#include <algorithm>
+#include <vector>
+using namespace std;
+
+int coinChange(const vector<int>& coins, int amount) {
+  vector<int> dp(amount + 1, amount + 1);
+  dp[0] = 0;
+  for (int value = 1; value <= amount; ++value)
+    for (int coin : coins) if (coin <= value)
+      dp[value] = min(dp[value], dp[value - coin] + 1);
+  return dp[amount] > amount ? -1 : dp[amount];
+}
+~~~
+
+### Java
+
+~~~java
+import java.util.*;
+
+int coinChange(int[] coins, int amount) {
+  int[] dp = new int[amount + 1];
+  Arrays.fill(dp, amount + 1);
+  dp[0] = 0;
+  for (int value = 1; value <= amount; value++)
+    for (int coin : coins) if (coin <= value)
+      dp[value] = Math.min(dp[value], dp[value - coin] + 1);
+  return dp[amount] > amount ? -1 : dp[amount];
+}
+~~~
+
+### Python
+
+~~~python
+def coin_change(coins: list[int], amount: int) -> int:
+    dp = [amount + 1] * (amount + 1)
+    dp[0] = 0
+    for value in range(1, amount + 1):
+        for coin in coins:
+            if coin <= value:
+                dp[value] = min(dp[value], dp[value - coin] + 1)
+    return -1 if dp[amount] > amount else dp[amount]
+~~~
+
+## Dry run
+
+With coins [1, 2, 5] and amount 5, initialize dp[0] = 0. The transition produces dp[1] = 1, dp[2] = 1, dp[3] = 2, dp[4] = 2, and dp[5] = 1.
+
+## Common mistakes
+
+- Choosing a state that omits information needed later.
+- Incorrect base values, especially impossible states.
+- Reusing an item in 0/1 knapsack by iterating capacity forward.
+
+## Interview questions
+
+- Find the longest increasing subsequence.
+- Count paths in a grid with obstacles.
+- Decide whether a string can be segmented into dictionary words.
+
+## Practice problems
+
+- Coin Change
+- House Robber
+- Longest Common Subsequence
+
+## Advanced notes
+
+State compression can reduce memory when a recurrence needs only nearby states. Optimize transitions with monotonic queues, bitsets, convex hull tricks, or divide-and-conquer DP only after proving their conditions.
