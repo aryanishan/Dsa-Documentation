@@ -169,7 +169,7 @@ export function getRelatedDocs(doc: DocumentationPage, limit = 4): Documentation
   const docs = getAllDocs();
   const explicitlyRelated = (doc.related ?? [])
     .map((relatedSlug) => docs.find((item) => item.slug === relatedSlug))
-    .filter((item): item is DocumentationPage => Boolean(item) && item.slug !== doc.slug);
+    .filter((item): item is DocumentationPage => item !== undefined && item.slug !== doc.slug);
   const selectedSlugs = new Set(explicitlyRelated.map((item) => item.slug));
   const inferredRelated = docs
     .filter((item) => item.slug !== doc.slug && !selectedSlugs.has(item.slug))
