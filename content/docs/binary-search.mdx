@@ -1,0 +1,228 @@
+---
+title: "Binary Search"
+description: "An efficient search algorithm that finds the position of a target value within a sorted array."
+category: "Algorithms"
+order: 7
+tags: ["algorithms", "binary-search", "divide-and-conquer"]
+prerequisites: ["arrays", "time-complexity"]
+related: ["binary-search-trees"]
+featured: true
+level: "Intermediate"
+---
+
+# Binary Search
+
+Binary Search is a classic algorithm used to find the position of a target value within a **sorted array**. 
+Instead of checking each element one by one (Linear Search), Binary Search repeatedly divides the search interval in half. 
+
+If the value of the search key is less than the item in the middle of the interval, the algorithm narrows the interval to the lower half. Otherwise, it narrows it to the upper half.
+
+## Real-world Analogy
+
+Think of searching for a word in a **physical dictionary**.
+If you are looking for the word "Monkey", you don't start at page 1 and read every word. Instead, you open the dictionary roughly in the middle. 
+- If you open to "Penguin", you know "Monkey" comes *before* it alphabetically, so you rip the dictionary in half and throw away the second half.
+- If you then open to "Lion", you know "Monkey" comes *after* it, so you throw away the first half.
+- You repeat this process until you find the exact page.
+
+<br />
+
+## Why use Binary Search?
+
+**The power of $O(\log N)$.**
+
+In a list of 1,000,000 elements, a linear search might take 1,000,000 checks. 
+A binary search will take at most **20 checks** ($2^{20} \approx 1,000,000$). 
+If you search the entire population of Earth (8 billion people, sorted), binary search takes a maximum of **33 checks**.
+
+<br />
+
+## The Core Logic
+
+1. Define a search space with a `left` boundary (initially 0) and a `right` boundary (initially $N-1$).
+2. Calculate the `mid` point: `mid = left + (right - left) / 2`.
+3. Compare the `target` to the element at `mid`.
+   - If `target == array[mid]`: You found it! Return `mid`.
+   - If `target < array[mid]`: The target must be in the left half. Update `right = mid - 1`.
+   - If `target > array[mid]`: The target must be in the right half. Update `left = mid + 1`.
+4. Repeat until `left > right` (which means the target is not in the array).
+
+<br />
+
+## Time & Space Complexity
+
+### Time Complexity
+- **Best Case:** $O(1)$ (The target is exactly in the middle on the first guess).
+- **Average Case:** $O(\log N)$
+- **Worst Case:** $O(\log N)$ (The target is not in the array, or requires narrowing down to a single element).
+
+### Space Complexity
+- **Iterative Implementation:** $O(1)$ auxiliary space.
+- **Recursive Implementation:** $O(\log N)$ auxiliary space due to the call stack.
+
+<br />
+
+## Implementations
+
+Here is the standard iterative implementation of Binary Search.
+
+<CodeTabs>
+<CodeTab language="C++" title="BinarySearch.cpp">
+```cpp
+#include <iostream>
+#include <vector>
+
+int binarySearch(const std::vector<int>& arr, int target) {
+    int left = 0;
+    int right = arr.size() - 1;
+    
+    while (left <= right) {
+        // To prevent integer overflow when left + right is very large
+        int mid = left + (right - left) / 2;
+        
+        if (arr[mid] == target) {
+            return mid; // Found
+        } else if (arr[mid] < target) {
+            left = mid + 1; // Search right half
+        } else {
+            right = mid - 1; // Search left half
+        }
+    }
+    
+    return -1; // Not found
+}
+```
+</CodeTab>
+<CodeTab language="Java" title="BinarySearch.java">
+```java
+public class BinarySearch {
+    public static int binarySearch(int[] arr, int target) {
+        int left = 0;
+        int right = arr.length - 1;
+        
+        while (left <= right) {
+            // To prevent integer overflow when left + right is very large
+            int mid = left + (right - left) / 2;
+            
+            if (arr[mid] == target) {
+                return mid; // Found
+            } else if (arr[mid] < target) {
+                left = mid + 1; // Search right half
+            } else {
+                right = mid - 1; // Search left half
+            }
+        }
+        
+        return -1; // Not found
+    }
+}
+```
+</CodeTab>
+<CodeTab language="Python" title="binary_search.py">
+```python
+def binary_search(arr, target):
+    left = 0
+    right = len(arr) - 1
+    
+    while left <= right:
+        # In Python, integers have arbitrary precision, so overflow isn't an issue.
+        # But this is the standard way to write it.
+        mid = left + (right - left) // 2
+        
+        if arr[mid] == target:
+            return mid  # Found
+        elif arr[mid] < target:
+            left = mid + 1  # Search right half
+        else:
+            right = mid - 1  # Search left half
+            
+    return -1  # Not found
+```
+</CodeTab>
+<CodeTab language="JavaScript" title="binarySearch.js">
+```javascript
+function binarySearch(arr, target) {
+    let left = 0;
+    let right = arr.length - 1;
+    
+    while (left <= right) {
+        // Use Math.floor to ensure integer division
+        let mid = left + Math.floor((right - left) / 2);
+        
+        if (arr[mid] === target) {
+            return mid; // Found
+        } else if (arr[mid] < target) {
+            left = mid + 1; // Search right half
+        } else {
+            right = mid - 1; // Search left half
+        }
+    }
+    
+    return -1; // Not found
+}
+```
+</CodeTab>
+</CodeTabs>
+
+<br />
+
+## Problem Solving Pattern: Binary Search on Answer
+
+Binary search isn't just for finding a number in an array. It can be used to find an optimal *answer* to a problem, as long as the answer space is monotonic (meaning, if `X` works, then `X+1` also works; or if `Y` fails, then `Y-1` also fails).
+
+**Example: Koko Eating Bananas**
+Koko loves to eat bananas. There are `n` piles of bananas. She wants to finish all bananas within `h` hours. What is the minimum speed `k` (bananas per hour) she must eat?
+
+Instead of searching an array, we binary search the *speed*. 
+- Minimum possible speed: `1`
+- Maximum possible speed: `max(piles)`
+
+```python
+def minEatingSpeed(piles, h):
+    left = 1
+    right = max(piles)
+    
+    # Helper function to check if a speed works
+    def can_finish(speed):
+        hours = 0
+        for p in piles:
+            hours += math.ceil(p / speed)
+        return hours <= h
+
+    res = right
+    while left <= right:
+        mid = left + (right - left) // 2
+        
+        if can_finish(mid):
+            res = mid          # This speed works, but maybe we can go slower?
+            right = mid - 1
+        else:
+            left = mid + 1     # Too slow, must eat faster
+            
+    return res
+```
+
+<br />
+
+## Common Pitfalls & Mistakes
+
+> [!WARNING]
+> **Integer Overflow**
+> 
+> Calculating `mid = (left + right) / 2` can cause integer overflow in C++ and Java if `left + right` exceeds the maximum integer limit ($2^{31}-1$). 
+> Always use `mid = left + (right - left) / 2`.
+
+> [!CAUTION]
+> **Infinite Loops**
+> 
+> A very common bug is writing `left = mid` or `right = mid` instead of `mid + 1` or `mid - 1`. If `left` and `right` are adjacent, `mid` will equal `left`. If you then update `left = mid`, the loop will run forever.
+
+<br />
+
+## Common Interview Questions
+
+1. **First Bad Version:** Given $N$ versions, find the first bad one (using an API).
+2. **Search in Rotated Sorted Array:** An array is rotated at a pivot. Search for a target in $O(\log N)$ time.
+3. **Find Minimum in Rotated Sorted Array:** Find the smallest element in a rotated array.
+4. **Search a 2D Matrix:** Binary search but mapping 1D indices to a 2D grid.
+5. **Capacity To Ship Packages Within D Days:** A classic "Binary Search on Answer" problem.

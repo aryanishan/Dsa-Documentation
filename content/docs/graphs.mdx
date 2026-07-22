@@ -1,134 +1,220 @@
 ---
-title: Graphs
-description: Model relationships with vertices and edges, then traverse and analyze them efficiently.
-slug: graphs
-category: Data Structures
-tags: [graph, bfs, dfs, traversal]
-order: 13
-readingTime: 10 min read
+title: "Graphs"
+description: "A non-linear data structure consisting of vertices (nodes) and edges (lines connecting them)."
+category: "Data Structures"
+order: 14
+tags: ["data-structures", "graphs", "bfs", "dfs"]
+prerequisites: ["trees", "arrays", "queue"]
+related: ["dynamic-programming"]
+featured: true
+level: "Advanced"
 ---
 
-## Definition
+# Graphs
 
-A graph consists of vertices connected by edges. Edges may be directed or undirected, weighted or unweighted.
+A **Graph** is a non-linear data structure consisting of vertices (often called nodes) and edges (lines connecting those nodes). While a tree represents hierarchical relationships, a graph represents a network of relationships where any node can connect to any other node.
 
-## Intuition
+In fact, a tree is just a special type of graph: a connected, acyclic, undirected graph.
 
-Graphs capture arbitrary relationships. Choose an adjacency list for sparse graphs and an adjacency matrix when dense edge lookup matters.
+## Real-world Analogy
 
-## Real-world analogy
+Think of a **Social Network** or a **City Map**.
+- On Facebook, you (a vertex) are friends with someone else (an edge). If you are friends with them, they are friends with you (undirected).
+- On Twitter/X, you (a vertex) follow a celebrity (an edge). They don't necessarily follow you back (directed).
+- On Google Maps, cities are vertices, and the highways between them are edges. The length of the highway is the "weight" of the edge.
 
-Cities are vertices and roads are edges; a route planner explores which cities can be reached from a starting city.
+<br />
 
-## Visual explanation
+## Graph Terminology
 
-~~~text
-0 ---- 1
-|    / |
-|  /   |
-2 ---- 3
+- **Vertex (V):** A node in the graph.
+- **Edge (E):** A connection between two vertices.
+- **Directed Graph (Digraph):** Edges have a direction (A -> B).
+- **Undirected Graph:** Edges are bidirectional (A <-> B).
+- **Weighted Graph:** Edges have a value or cost associated with them.
+- **Connected Graph:** There is a path between every pair of vertices.
+- **Cycle:** A path that starts and ends at the same vertex without traversing any edge twice.
+- **Degree:** The number of edges connected to a vertex (In-degree and Out-degree for directed graphs).
 
-BFS from 0 visits: 0, then 1 and 2, then 3.
-~~~
+<br />
 
-## Time complexity
+## Representing a Graph
 
-| Operation/algorithm | Adjacency list | Adjacency matrix |
-| --- | --- | --- |
-| Add edge | O(1) | O(1) |
-| Check edge | O(degree) | O(1) |
-| BFS / DFS | O(V + E) | O(V²) |
+There are two primary ways to represent a graph in code. Suppose we have a graph with 3 nodes: 0, 1, and 2. Node 0 connects to 1 and 2. Node 1 connects to 2.
 
-## Space complexity
+### 1. Adjacency Matrix
+A 2D array of size $V \times V$ where $matrix[i][j]$ is `1` if there is an edge from vertex $i$ to vertex $j$, and `0` otherwise.
+- **Pros:** Checking if an edge exists is $O(1)$.
+- **Cons:** Uses $O(V^2)$ space, which is terrible for sparse graphs (graphs with few edges).
 
-| Representation | Space |
-| --- | --- |
-| Adjacency list | O(V + E) |
-| Adjacency matrix | O(V²) |
-| BFS visited + queue | O(V) |
+```text
+  0 1 2
+0 0 1 1
+1 0 0 1
+2 0 0 0
+```
 
-## Implementations
+### 2. Adjacency List (Most Common)
+An array of lists (or a hash map). The index represents the vertex, and the list contains all vertices it connects to.
+- **Pros:** Space efficient $O(V + E)$. Fast to iterate over all neighbors of a vertex.
+- **Cons:** Checking if a specific edge exists takes $O(\text{degree of V})$.
 
-### C++
+```text
+0 -> [1, 2]
+1 -> [2]
+2 -> []
+```
 
-~~~cpp
-#include <queue>
+<br />
+
+## Graph Traversal
+
+Just like trees, we can traverse graphs using Depth-First Search (DFS) or Breadth-First Search (BFS). 
+**Crucial Difference:** Because graphs can have cycles, we MUST keep track of which nodes we have already visited using a `visited` set or array to prevent infinite loops.
+
+### Depth-First Search (DFS)
+Explores as far as possible along each branch before backtracking. Great for pathfinding, topological sorting, and cycle detection.
+
+<CodeTabs>
+<CodeTab language="C++" title="GraphDFS.cpp">
+```cpp
+#include <iostream>
 #include <vector>
-using namespace std;
 
-vector<int> bfs(const vector<vector<int>>& graph, int start) {
-  vector<int> order, seen(graph.size());
-  queue<int> q;
-  q.push(start); seen[start] = 1;
-  while (!q.empty()) {
-    int node = q.front(); q.pop(); order.push_back(node);
-    for (int next : graph[node]) if (!seen[next]) {
-      seen[next] = 1; q.push(next);
+void dfsHelper(int node, const std::vector<std::vector<int>>& adj, std::vector<bool>& visited) {
+    visited[node] = true;
+    std::cout << node << " ";
+    
+    // Visit all neighbors
+    for (int neighbor : adj[node]) {
+        if (!visited[neighbor]) {
+            dfsHelper(neighbor, adj, visited);
+        }
     }
-  }
-  return order;
 }
-~~~
 
-### Java
+void dfs(int startNode, const std::vector<std::vector<int>>& adj) {
+    std::vector<bool> visited(adj.size(), false);
+    dfsHelper(startNode, adj, visited);
+}
+```
+</CodeTab>
+<CodeTab language="Python" title="graph_dfs.py">
+```python
+def dfs(start_node, adj_list):
+    visited = set()
+    
+    def dfs_helper(node):
+        visited.add(node)
+        print(node, end=" ")
+        
+        for neighbor in adj_list[node]:
+            if neighbor not in visited:
+                dfs_helper(neighbor)
+                
+    dfs_helper(start_node)
+```
+</CodeTab>
+</CodeTabs>
 
-~~~java
-import java.util.*;
+### Breadth-First Search (BFS)
+Explores the neighbor nodes first, before moving to the next level neighbors. Ideal for finding the **shortest path** in an unweighted graph.
 
-List<Integer> bfs(List<List<Integer>> graph, int start) {
-  List<Integer> order = new ArrayList<>();
-  boolean[] seen = new boolean[graph.size()];
-  Queue<Integer> queue = new ArrayDeque<>();
-  queue.offer(start); seen[start] = true;
-  while (!queue.isEmpty()) {
-    int node = queue.poll(); order.add(node);
-    for (int next : graph.get(node)) if (!seen[next]) {
-      seen[next] = true; queue.offer(next);
+<CodeTabs>
+<CodeTab language="C++" title="GraphBFS.cpp">
+```cpp
+#include <iostream>
+#include <vector>
+#include <queue>
+
+void bfs(int startNode, const std::vector<std::vector<int>>& adj) {
+    std::vector<bool> visited(adj.size(), false);
+    std::queue<int> q;
+    
+    visited[startNode] = true;
+    q.push(startNode);
+    
+    while (!q.empty()) {
+        int node = q.front();
+        q.pop();
+        std::cout << node << " ";
+        
+        for (int neighbor : adj[node]) {
+            if (!visited[neighbor]) {
+                visited[neighbor] = true;
+                q.push(neighbor);
+            }
+        }
     }
-  }
-  return order;
 }
-~~~
-
-### Python
-
-~~~python
+```
+</CodeTab>
+<CodeTab language="Python" title="graph_bfs.py">
+```python
 from collections import deque
 
-def bfs(graph: list[list[int]], start: int) -> list[int]:
-    seen, order, queue = {start}, [], deque([start])
+def bfs(start_node, adj_list):
+    visited = set([start_node])
+    queue = deque([start_node])
+    
     while queue:
         node = queue.popleft()
-        order.append(node)
-        for nxt in graph[node]:
-            if nxt not in seen:
-                seen.add(nxt)
-                queue.append(nxt)
-    return order
-~~~
+        print(node, end=" ")
+        
+        for neighbor in adj_list[node]:
+            if neighbor not in visited:
+                visited.add(neighbor)
+                queue.append(neighbor)
+```
+</CodeTab>
+</CodeTabs>
 
-## Dry run
+<br />
 
-Starting at 0, enqueue its unseen neighbors 1 and 2. Process 1, discover 3; process 2, where 3 is already discovered; then process 3. Order: 0, 1, 2, 3.
+## Implicit Graphs
 
-## Common mistakes
+In many interview questions, you won't be explicitly given a graph with an adjacency list. Instead, you'll be given a **2D Matrix (Grid)**. 
+In a grid, each cell is a vertex, and its edges connect to its up, down, left, and right neighbors.
 
-- Marking a node visited only when dequeued, which can enqueue duplicates.
-- Treating a directed graph as undirected.
-- Forgetting to start a traversal for every component.
+**Example: Number of Islands**
+Given an $m \times n$ 2D binary grid which represents a map of '1's (land) and '0's (water), return the number of islands.
 
-## Interview questions
+```python
+def numIslands(grid):
+    if not grid: return 0
+    
+    rows, cols = len(grid), len(grid[0])
+    islands = 0
+    
+    def dfs(r, c):
+        # Base case: out of bounds or water
+        if r < 0 or c < 0 or r >= rows or c >= cols or grid[r][c] == "0":
+            return
+            
+        # Mark as visited by sinking the island
+        grid[r][c] = "0"
+        
+        # Visit all 4 neighbors
+        dfs(r+1, c)
+        dfs(r-1, c)
+        dfs(r, c+1)
+        dfs(r, c-1)
+        
+    for r in range(rows):
+        for c in range(cols):
+            if grid[r][c] == "1":
+                islands += 1
+                dfs(r, c) # Sink the entire island
+                
+    return islands
+```
 
-- Count islands in a grid.
-- Detect a cycle in a directed graph.
-- Find the shortest path in an unweighted graph.
+<br />
 
-## Practice problems
+## Common Interview Questions
 
-- Number of Islands
-- Course Schedule
-- Clone Graph
-
-## Advanced notes
-
-Dijkstra handles non-negative weights, Bellman-Ford tolerates negative edges, and Floyd-Warshall solves all-pairs shortest paths. Topological order exists only for directed acyclic graphs.
+1. **Number of Islands:** The ultimate introduction to implicit grid graphs and DFS.
+2. **Clone Graph:** A deep copy problem that tests your understanding of object references and cycle prevention.
+3. **Course Schedule:** Determines if you can finish all courses given prerequisites. (Topological Sort / Cycle Detection).
+4. **Rotting Oranges:** A classic multi-source BFS problem to find the minimum time until all oranges rot.
+5. **Word Ladder:** Find the shortest transformation sequence from a start word to an end word (BFS).

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { CalendarClock, Clock3, Tag } from "lucide-react";
+import { BookOpenCheck, CalendarClock, Clock3, Tag } from "lucide-react";
 import { compileMDX } from "next-mdx-remote/rsc";
 import { notFound } from "next/navigation";
 import rehypeHighlight from "rehype-highlight";
@@ -12,10 +12,39 @@ import { ReadingProgress } from "@/components/docs/reading-progress";
 import { RelatedTopics } from "@/components/docs/related-topics";
 import { TableOfContents } from "@/components/docs/table-of-contents";
 import { mdxComponents } from "@/components/mdx";
-import { getAdjacentDocs, getAllDocs, getDocBySlug, getDocsByCategory } from "@/lib/docs";
+import { getAdjacentDocs, getAllDocs, getDocBySlug, getDocsByCategory, getRelatedDocs } from "@/lib/docs";
 import { siteConfig } from "@/lib/site";
+import { slugify } from "@/lib/utils";
 
 type PageProps = { params: Promise<{ slug: string }> };
+type RehypeNode = {
+  type?: string;
+  tagName?: string;
+  value?: string;
+  properties?: Record<string, unknown>;
+  children?: RehypeNode[];
+};
+
+function nodeText(node: RehypeNode): string {
+  if (typeof node.value === "string") return node.value;
+  return node.children?.map(nodeText).join("") ?? "";
+}
+
+function rehypeHeadingIds() {
+  return (tree: RehypeNode) => {
+    const usedIds = new Map<string, number>();
+    const visit = (node: RehypeNode) => {
+      if (node.type === "element" && (node.tagName === "h2" || node.tagName === "h3")) {
+        const baseId = slugify(nodeText(node));
+        const duplicate = usedIds.get(baseId) ?? 0;
+        usedIds.set(baseId, duplicate + 1);
+        node.properties = { ...node.properties, id: duplicate ? `${baseId}-${duplicate + 1}` : baseId };
+      }
+      node.children?.forEach(visit);
+    };
+    visit(tree);
+  };
+}
 
 export const dynamicParams = false;
 
@@ -46,30 +75,15 @@ export default async function DocumentationPage({ params }: PageProps) {
   const { content } = await compileMDX({
     source: doc.source,
     components: mdxComponents,
-    options: { mdxOptions: { remarkPlugins: [remarkGfm], rehypePlugins: [rehypeHighlight] } },
+    options: { mdxOptions: { remarkPlugins: [remarkGfm], rehypePlugins: [rehypeHighlight, rehypeHeadingIds] } },
   });
   const groups = getDocsByCategory();
   const { previous, next } = getAdjacentDocs(doc.slug);
   const allDocs = getAllDocs();
-  const explicitlyRelated = (doc.related ?? [])
-    .map((relatedSlug) => allDocs.find((item) => item.slug === relatedSlug))
-    .filter((item): item is NonNullable<typeof item> => Boolean(item))
-    .slice(0, 4);
-  // Use frontmatter relationships when they exist, otherwise generate sensible related
-  // lessons from category and tag overlap so every documentation page has useful next reads.
-  const related = explicitlyRelated.length
-    ? explicitlyRelated
-    : allDocs
-        .filter((item) => item.slug !== doc.slug)
-        .map((item) => ({
-          item,
-          score:
-            (item.category === doc.category ? 10 : 0) +
-            item.tags.filter((tag) => doc.tags.includes(tag)).length,
-        }))
-        .sort((a, b) => b.score - a.score || a.item.order - b.item.order)
-        .slice(0, 4)
-        .map(({ item }) => item);
+  const prerequisites = (doc.prerequisites ?? [])
+    .map((prerequisiteSlug) => allDocs.find((item) => item.slug === prerequisiteSlug))
+    .filter((item): item is NonNullable<typeof item> => Boolean(item));
+  const related = getRelatedDocs(doc);
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "TechArticle",
@@ -77,6 +91,8 @@ export default async function DocumentationPage({ params }: PageProps) {
     description: doc.description,
     url: `${siteConfig.url}/docs/${doc.slug}`,
     keywords: doc.tags.join(", "),
+    articleSection: doc.category,
+    timeRequired: `PT${doc.readingTime}M`,
     isPartOf: { "@type": "WebSite", name: siteConfig.name, url: siteConfig.url },
     breadcrumb: {
       "@type": "BreadcrumbList",

@@ -1,125 +1,276 @@
 ---
-title: Trees
-description: Learn hierarchical node structures, traversals, depth, height, and balanced-tree reasoning.
-slug: trees
-category: Intermediate
-tags:
-  - tree
-  - traversal
-  - dfs
-  - bfs
-order: 9
-readingTime: 9 min read
+title: "Trees"
+description: "A hierarchical data structure consisting of nodes connected by edges, useful for representing hierarchical relationships."
+category: "Data Structures"
+order: 10
+tags: ["data-structures", "trees", "hierarchy"]
+prerequisites: ["linked-lists", "recursion"]
+related: ["binary-search-trees", "graphs"]
+featured: true
+level: "Intermediate"
 ---
 
-## Definition
+# Trees
 
-A tree is a connected, acyclic hierarchy of nodes. A binary tree permits at most two children per node; the top node is the root and nodes without children are leaves.
+Unlike arrays, linked lists, stacks, and queues, which are linear data structures, a **tree** is a hierarchical data structure. 
+It consists of nodes connected by edges. A tree has one root node, and every other node is connected by exactly one incoming edge from another node (its parent).
 
-## Intuition
+## Real-world Analogy
 
-Each subtree is itself a smaller tree, making recursion natural. Traversals define the order of visiting nodes: preorder, inorder, postorder, and level order.
+Think of a **Family Tree** or a **Corporate Organization Chart**. 
+The CEO is at the top (the root). The CEO manages several VPs. Each VP manages Directors, who manage Managers, and so on. No one has two direct bosses, and there are no circular reporting lines.
 
-## Real-world analogy
+<br />
 
-A company org chart has one top-level leader, branches into teams, and eventually reaches individual contributors with no reports.
+## Tree Terminology
 
-## Visual explanation
+- **Node:** An entity that contains a value and pointers to child nodes.
+- **Root:** The topmost node in the tree.
+- **Parent:** A node that has branches extending to other nodes.
+- **Child:** A node connected underneath a parent.
+- **Leaf:** A node with no children (at the bottom of the tree).
+- **Edge:** The connection between two nodes.
+- **Depth:** The number of edges from the root to a specific node.
+- **Height:** The number of edges on the longest path from a specific node to a leaf.
+
+<br />
+
+## Binary Trees
+
+The most common type of tree in computer science is the **Binary Tree**. In a binary tree, every node has at most two children, commonly referred to as the `left` child and `right` child.
 
 ```text
-        8
-       / \
-      3  10
-     / \   \
-    1   6  14
+       A         <-- Root
+     /   \
+    B     C      <-- Internal Nodes
+   / \     \
+  D   E     F    <-- Leaf Nodes
 ```
 
-## Time complexity
+<br />
 
-| Operation | Balanced tree | Skewed tree |
-| --- | --- | --- |
-| Full traversal | `O(n)` | `O(n)` |
-| Compute height | `O(n)` | `O(n)` |
-| DFS search | `O(n)` | `O(n)` |
-| Level-order traversal | `O(n)` | `O(n)` |
+## Tree Traversal
 
-## Space complexity
+Because trees are non-linear, there are multiple ways to visit all the nodes. The three standard **Depth-First Search (DFS)** traversals are:
 
-| Traversal | Extra space | Notes |
-| --- | --- | --- |
-| Recursive DFS | `O(h)` | `h` is tree height |
-| Iterative DFS | `O(h)` typical | Explicit stack |
-| BFS | `O(w)` | `w` is max width |
+1. **Pre-order (Root, Left, Right):** `A -> B -> D -> E -> C -> F`
+   *(Useful for cloning the tree or printing structure.)*
+   
+2. **In-order (Left, Root, Right):** `D -> B -> E -> A -> C -> F`
+   *(Crucial for Binary Search Trees, as it visits nodes in sorted order.)*
+   
+3. **Post-order (Left, Right, Root):** `D -> E -> B -> F -> C -> A`
+   *(Useful for deleting the tree, as you delete children before parents.)*
+
+Additionally, there is **Breadth-First Search (BFS)** or **Level-order traversal**:
+- **Level-order (Top to bottom, left to right):** `A -> B -> C -> D -> E -> F`
+
+<br />
 
 ## Implementations
 
-### C++
+Here is a standard representation of a Binary Tree Node and a recursive DFS traversal.
 
+<CodeTabs>
+<CodeTab language="C++" title="Tree.cpp">
 ```cpp
+#include <iostream>
+
+// Define the TreeNode structure
 struct TreeNode {
-    int value;
-    TreeNode* left = nullptr;
-    TreeNode* right = nullptr;
+    int val;
+    TreeNode* left;
+    TreeNode* right;
+    
+    TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
 };
 
-int height(TreeNode* node) {
-    if (node == nullptr) return 0;
-    return 1 + max(height(node->left), height(node->right));
-}
+class BinaryTree {
+public:
+    // In-order traversal: Left -> Root -> Right
+    void inorder(TreeNode* root) {
+        if (root == nullptr) return;
+        
+        inorder(root->left);
+        std::cout << root->val << " ";
+        inorder(root->right);
+    }
+    
+    // Calculate the maximum depth (height) of the tree
+    int maxDepth(TreeNode* root) {
+        if (root == nullptr) return 0;
+        
+        int leftDepth = maxDepth(root->left);
+        int rightDepth = maxDepth(root->right);
+        
+        return std::max(leftDepth, rightDepth) + 1;
+    }
+};
 ```
-
-### Java
-
+</CodeTab>
+<CodeTab language="Java" title="Tree.java">
 ```java
-static class TreeNode {
-    int value;
-    TreeNode left, right;
-    TreeNode(int value) { this.value = value; }
-}
-
-static int height(TreeNode node) {
-    if (node == null) return 0;
-    return 1 + Math.max(height(node.left), height(node.right));
+public class Tree {
+    // Define the TreeNode class
+    public static class TreeNode {
+        int val;
+        TreeNode left;
+        TreeNode right;
+        
+        TreeNode(int x) { 
+            val = x; 
+        }
+    }
+    
+    // In-order traversal: Left -> Root -> Right
+    public void inorder(TreeNode root) {
+        if (root == null) return;
+        
+        inorder(root.left);
+        System.out.print(root.val + " ");
+        inorder(root.right);
+    }
+    
+    // Calculate the maximum depth (height) of the tree
+    public int maxDepth(TreeNode root) {
+        if (root == null) return 0;
+        
+        int leftDepth = maxDepth(root.left);
+        int rightDepth = maxDepth(root.right);
+        
+        return Math.max(leftDepth, rightDepth) + 1;
+    }
 }
 ```
-
-### Python
-
+</CodeTab>
+<CodeTab language="Python" title="tree.py">
 ```python
 class TreeNode:
-    def __init__(self, value: int, left=None, right=None):
-        self.value = value
+    def __init__(self, val=0, left=None, right=None):
+        self.val = val
         self.left = left
         self.right = right
 
-def height(node: TreeNode | None) -> int:
-    if node is None:
-        return 0
-    return 1 + max(height(node.left), height(node.right))
+class BinaryTree:
+    # In-order traversal: Left -> Root -> Right
+    def inorder(self, root):
+        if not root:
+            return
+            
+        self.inorder(root.left)
+        print(root.val, end=" ")
+        self.inorder(root.right)
+        
+    # Calculate the maximum depth (height) of the tree
+    def max_depth(self, root):
+        if not root:
+            return 0
+            
+        left_depth = self.max_depth(root.left)
+        right_depth = self.max_depth(root.right)
+        
+        return max(left_depth, right_depth) + 1
+```
+</CodeTab>
+<CodeTab language="JavaScript" title="tree.js">
+```javascript
+class TreeNode {
+    constructor(val, left = null, right = null) {
+        this.val = val;
+        this.left = left;
+        this.right = right;
+    }
+}
+
+class BinaryTree {
+    // In-order traversal: Left -> Root -> Right
+    inorder(root) {
+        if (!root) return;
+        
+        this.inorder(root.left);
+        process.stdout.write(root.val + " ");
+        this.inorder(root.right);
+    }
+    
+    // Calculate the maximum depth (height) of the tree
+    maxDepth(root) {
+        if (!root) return 0;
+        
+        const leftDepth = this.maxDepth(root.left);
+        const rightDepth = this.maxDepth(root.right);
+        
+        return Math.max(leftDepth, rightDepth) + 1;
+    }
+}
+```
+</CodeTab>
+</CodeTabs>
+
+<br />
+
+## Problem Solving Pattern: Depth-First Search (DFS)
+
+Recursion is your best friend when dealing with trees. Most tree problems can be solved by thinking about the problem from the perspective of a single node.
+
+**The Magic Question:** *"If I know the answer for my left subtree, and I know the answer for my right subtree, how do I calculate the answer for my current node?"*
+
+**Example: Invert a Binary Tree**
+If you have a function that successfully inverts the left subtree, and successfully inverts the right subtree, what must the current node do? It just needs to swap its `left` and `right` pointers!
+
+```python
+def invertTree(root):
+    if not root:
+        return None
+        
+    # 1. Ask the recursion fairy to invert the children
+    left_inverted = invertTree(root.left)
+    right_inverted = invertTree(root.right)
+    
+    # 2. Swap them at the current node
+    root.left = right_inverted
+    root.right = left_inverted
+    
+    return root
 ```
 
-## Dry run
+<br />
 
-For the diagram, `height(3)` is `2` because its deepest leaf is one edge below it. The root combines left height `2` and right height `2`, so `height(8)` is `3` nodes.
+## Problem Solving Pattern: Breadth-First Search (BFS)
 
-## Common mistakes
+When a problem asks for things "level by level" or "shortest path", use a Queue to perform a Breadth-First Search.
 
-- Mixing height in edges with height in nodes.
-- Forgetting the empty-tree base case.
-- Using inorder traversal as sorted output for a tree that is not a BST.
+```python
+from collections import deque
 
-## Interview questions
+def levelOrder(root):
+    if not root: return []
+    
+    res = []
+    queue = deque([root])
+    
+    while queue:
+        level_size = len(queue)
+        current_level = []
+        
+        # Process all nodes on the current level
+        for _ in range(level_size):
+            node = queue.popleft()
+            current_level.append(node.val)
+            
+            if node.left: queue.append(node.left)
+            if node.right: queue.append(node.right)
+            
+        res.append(current_level)
+        
+    return res
+```
 
-- How do DFS and BFS differ on a tree?
-- How do you determine whether a tree is balanced?
-- How do you find the lowest common ancestor?
+<br />
 
-## Practice problems
+## Common Interview Questions
 
-- Maximum Depth of Binary Tree
-- Binary Tree Level Order Traversal
-- Diameter of Binary Tree
-
-## Advanced notes
-
-Balanced trees keep height near `log n`; a skewed tree can have height `n`. Iterative traversals provide control over stack use and are essential when recursion depth is unsafe.
+1. **Maximum Depth of Binary Tree:** The "Hello World" of tree problems.
+2. **Invert Binary Tree:** A classic DFS swapping problem.
+3. **Same Tree:** Traverse two trees simultaneously and compare values.
+4. **Binary Tree Level Order Traversal:** The ultimate BFS template problem.
+5. **Lowest Common Ancestor:** Find the lowest node that has both nodes as descendants.

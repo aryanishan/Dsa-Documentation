@@ -1,0 +1,174 @@
+---
+title: Fenwick Tree
+description: Query prefix sums and apply point updates in logarithmic time using a compact binary-indexed tree.
+slug: fenwick-tree
+category: Advanced Data Structures
+tags: [fenwick-tree, binary-indexed-tree, prefix-sum, range-query]
+order: 23
+level: Advanced
+related: [arrays, segment-trees, bit-manipulation]
+prerequisites: [arrays, bit-manipulation]
+---
+
+## Definition
+
+A Fenwick tree, also called a Binary Indexed Tree (BIT), stores partial sums in an array so it can update one value and query a prefix sum in O(log n). It is more compact than a segment tree when the operation is invertible, such as addition.
+
+## Intuition
+
+Index `i` owns a block whose size is its least significant set bit: `i & -i`. Moving backward by that amount jumps to the next disjoint block in a prefix; moving forward by it updates every aggregate that contains an index.
+
+## Visualization
+
+~~~text
+index:  1  2  3  4  5  6  7  8
+tree:  [1][1-2][3][1-4][5][5-6][7][1-8]
+
+prefix(7) reads blocks [7], [5-6], [1-4].
+~~~
+
+## Real-world example
+
+A live analytics dashboard can track clicks per minute and update a minute as events arrive. A Fenwick tree then answers "how many clicks occurred before this time?" without rescanning every minute.
+
+## Applications
+
+- Dynamic prefix and range sums.
+- Counting inversions after coordinate compression.
+- Frequency tables and order statistics.
+- Offline sweep-line algorithms with compressed coordinates.
+
+## Advantages
+
+- O(n) storage and very small constant factors.
+- Straightforward point updates and prefix queries.
+- Often faster and simpler than a segment tree for sums and counts.
+
+## Disadvantages
+
+- Natural only for prefix operations that can form ranges by inversion.
+- Less flexible than a segment tree for minimum, maximum, or arbitrary merge functions.
+- Uses one-based indexing, which can cause off-by-one errors.
+
+## Complexity table
+
+| Operation | Time | Space |
+| --- | --- | --- |
+| Build with updates | O(n log n) | O(n) |
+| Optimized build | O(n) | O(n) |
+| Point update | O(log n) | O(1) extra |
+| Prefix or range sum | O(log n) | O(1) extra |
+
+## Step-by-step explanation
+
+For `add(index, delta)`, repeatedly add `delta` to `tree[index]` then set `index += index & -index`. For `prefix(index)`, repeatedly add `tree[index]` then set `index -= index & -index`. A range sum `[left, right]` is `prefix(right) - prefix(left - 1)`.
+
+## Dry run
+
+For values `[2, 1, 3, 4]`, query the sum through index 3 (one-based):
+
+| index | block read | running sum | next index |
+| --- | --- | --- | --- |
+| 3 | value 3 block | 3 | 2 |
+| 2 | values 1-2 block | 6 | 0 |
+
+The result is `2 + 1 + 3 = 6`.
+
+## Implementations
+
+### C++
+
+~~~cpp
+#include <vector>
+
+struct Fenwick {
+  std::vector<long long> tree;
+  explicit Fenwick(int n) : tree(n + 1) {}
+  void add(int index, long long delta) {
+    for (; index < static_cast<int>(tree.size()); index += index & -index) tree[index] += delta;
+  }
+  long long prefix(int index) const {
+    long long sum = 0;
+    for (; index > 0; index -= index & -index) sum += tree[index];
+    return sum;
+  }
+};
+~~~
+
+### Java
+
+~~~java
+class Fenwick {
+    private final long[] tree;
+    Fenwick(int size) { tree = new long[size + 1]; }
+    void add(int index, long delta) {
+        for (; index < tree.length; index += index & -index) tree[index] += delta;
+    }
+    long prefix(int index) {
+        long sum = 0;
+        for (; index > 0; index -= index & -index) sum += tree[index];
+        return sum;
+    }
+}
+~~~
+
+### Python
+
+~~~python
+class Fenwick:
+    def __init__(self, size: int) -> None:
+        self.tree = [0] * (size + 1)
+
+    def add(self, index: int, delta: int) -> None:
+        while index < len(self.tree):
+            self.tree[index] += delta
+            index += index & -index
+
+    def prefix(self, index: int) -> int:
+        total = 0
+        while index:
+            total += self.tree[index]
+            index -= index & -index
+        return total
+~~~
+
+### JavaScript
+
+~~~javascript
+class Fenwick {
+  constructor(size) { this.tree = Array(size + 1).fill(0); }
+  add(index, delta) {
+    for (; index < this.tree.length; index += index & -index) this.tree[index] += delta;
+  }
+  prefix(index) {
+    let total = 0;
+    for (; index > 0; index -= index & -index) total += this.tree[index];
+    return total;
+  }
+}
+~~~
+
+## Common mistakes
+
+- Passing a zero-based index into a one-based BIT without adding one.
+- Using a Fenwick tree for a non-invertible range operation such as minimum.
+- Forgetting `left - 1` when converting a prefix sum into a range sum.
+- Using an integer type that overflows under many updates.
+
+## Interview questions
+
+1. Count smaller numbers after self.
+2. Count inversions in an array.
+3. Maintain a mutable range-sum query structure.
+4. Find the k-th item from a dynamic frequency table.
+
+## Practice problems
+
+- Range Sum Query - Mutable (LeetCode 307)
+- Count of Smaller Numbers After Self (LeetCode 315)
+- Create Sorted Array through Instructions (LeetCode 1649)
+- Inversion Count (classic)
+
+## Further reading
+
+Learn coordinate compression next, then compare a Fenwick tree with a segment tree. The decision comes down to the aggregate operation and updates you need to support.

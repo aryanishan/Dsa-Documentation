@@ -1,128 +1,276 @@
 ---
-title: Stack
-description: Use last-in, first-out storage for parsing, undo flows, monotonic scans, and depth-first search.
-slug: stack
-category: Beginner
-tags:
-  - stack
-  - lifo
-  - monotonic-stack
-order: 6
-readingTime: 7 min read
+title: "Stack"
+description: "A linear data structure that follows the Last In, First Out (LIFO) principle."
+category: "Data Structures"
+order: 3
+tags: ["data-structures", "stack", "lifo"]
+prerequisites: ["arrays", "linked-lists"]
+related: ["queue"]
+featured: true
+level: "Beginner"
 ---
 
-## Definition
+# Stack
 
-A stack is a last-in, first-out collection. Values are added with `push`, inspected with `top` or `peek`, and removed with `pop`.
+A stack is a linear data structure that follows a particular order in which operations are performed. The order is **LIFO (Last In, First Out)**. This means that the last element added to the stack will be the first element to be removed.
 
-## Intuition
+Think of a stack as a collection of elements with two principal operations:
+1. **Push:** Adds an element to the collection.
+2. **Pop:** Removes the most recently added element that was not yet removed.
 
-The newest unfinished task belongs on top. Completing it exposes the task immediately below it, which mirrors nested calls and matching delimiters.
+## Real-world Analogy
 
-## Real-world analogy
+Think of a stack like a **stack of plates** in a cafeteria. 
+When a new plate is washed, it gets added to the *top* of the stack (Push). When someone needs a plate, they take one from the *top* of the stack (Pop). You cannot easily access the plate at the bottom without first removing all the plates above it.
 
-A stack of plates is used from the top. The most recently placed plate is the first one you can remove.
+<br />
 
-## Visual explanation
+## Core Operations
 
-```text
-push A, then B, then C
+1. **Push(x):** Insert element $x$ at the top of the stack.
+2. **Pop():** Remove and return the top element of the stack.
+3. **Peek() / Top():** Return the top element without removing it.
+4. **isEmpty():** Check if the stack has no elements.
 
-top -> [C]
-       [B]
-       [A]
-pop returns C
-```
+<br />
 
-## Time complexity
+## Time & Space Complexity
 
-| Operation | Array-backed stack | Linked stack |
-| --- | --- | --- |
-| Push | `O(1)` amortized | `O(1)` |
-| Pop | `O(1)` | `O(1)` |
-| Peek | `O(1)` | `O(1)` |
-| Search | `O(n)` | `O(n)` |
+### Time Complexity
 
-## Space complexity
+| Operation | Array Implementation | Linked List Implementation |
+| :--- | :--- | :--- |
+| **Push** | $O(1)$ amortized | $O(1)$ |
+| **Pop** | $O(1)$ | $O(1)$ |
+| **Peek** | $O(1)$ | $O(1)$ |
+| **Search** | $O(N)$ | $O(N)$ |
 
-| Use case | Extra space | Notes |
-| --- | --- | --- |
-| Delimiter validation | `O(n)` worst case | All opens may remain |
-| Monotonic stack | `O(n)` | Stores candidate indexes |
-| Iterative DFS | `O(n)` | Replaces recursion stack |
+*Note: In dynamic arrays (like Python's `list` or C++'s `std::vector`), push is $O(1)$ amortized, but occasionally $O(N)$ when the underlying array needs to resize.*
+
+### Space Complexity
+- **Overall:** $O(N)$ where $N$ is the number of elements in the stack.
+
+<br />
 
 ## Implementations
 
-### C++
+A stack can be implemented using either an **Array** or a **Linked List**. 
+- **Array-based:** More cache-friendly, less memory overhead per element, but may require occasional resizing.
+- **Linked List-based:** Never requires resizing, but has overhead for storing pointers and is less cache-friendly.
 
+Here are implementations using an underlying Array (the most common approach in modern languages).
+
+<CodeTabs>
+<CodeTab language="C++" title="Stack.cpp">
 ```cpp
-bool isValid(const string& text) {
-    stack<char> open;
-    unordered_map<char, char> matching{{')', '('}, {']', '['}, {'}', '{'}};
-    for (char ch : text) {
-        if (ch == '(' || ch == '[' || ch == '{') open.push(ch);
-        else if (matching.count(ch)) {
-            if (open.empty() || open.top() != matching[ch]) return false;
-            open.pop();
-        }
+#include <iostream>
+#include <vector>
+#include <stdexcept>
+
+class Stack {
+private:
+    std::vector<int> elements;
+
+public:
+    // Push element to the top
+    void push(int val) {
+        elements.push_back(val);
     }
-    return open.empty();
-}
+
+    // Remove and return the top element
+    int pop() {
+        if (isEmpty()) {
+            throw std::out_of_range("Stack is empty");
+        }
+        int topElement = elements.back();
+        elements.pop_back();
+        return topElement;
+    }
+
+    // Return the top element without removing
+    int peek() const {
+        if (isEmpty()) {
+            throw std::out_of_range("Stack is empty");
+        }
+        return elements.back();
+    }
+
+    // Check if empty
+    bool isEmpty() const {
+        return elements.empty();
+    }
+    
+    // Get current size
+    int size() const {
+        return elements.size();
+    }
+};
 ```
-
-### Java
-
+</CodeTab>
+<CodeTab language="Java" title="Stack.java">
 ```java
-static boolean isValid(String text) {
-    Deque<Character> open = new ArrayDeque<>();
-    Map<Character, Character> matching = Map.of(')', '(', ']', '[', '}', '{');
-    for (char ch : text.toCharArray()) {
-        if (ch == '(' || ch == '[' || ch == '{') open.push(ch);
-        else if (matching.containsKey(ch)) {
-            if (open.isEmpty() || open.pop() != matching.get(ch)) return false;
-        }
+import java.util.ArrayList;
+import java.util.EmptyStackException;
+
+public class Stack<T> {
+    private ArrayList<T> elements;
+
+    public Stack() {
+        elements = new ArrayList<>();
     }
-    return open.isEmpty();
+
+    // Push element to the top
+    public void push(T val) {
+        elements.add(val);
+    }
+
+    // Remove and return the top element
+    public T pop() {
+        if (isEmpty()) {
+            throw new EmptyStackException();
+        }
+        return elements.remove(elements.size() - 1);
+    }
+
+    // Return the top element without removing
+    public T peek() {
+        if (isEmpty()) {
+            throw new EmptyStackException();
+        }
+        return elements.get(elements.size() - 1);
+    }
+
+    // Check if empty
+    public boolean isEmpty() {
+        return elements.isEmpty();
+    }
+    
+    // Get current size
+    public int size() {
+        return elements.size();
+    }
 }
 ```
+</CodeTab>
+<CodeTab language="Python" title="stack.py">
+```python
+class Stack:
+    def __init__(self):
+        # We use a standard list as the underlying array
+        self.elements = []
 
-### Python
+    def push(self, val):
+        """Push element to the top"""
+        self.elements.append(val)
+
+    def pop(self):
+        """Remove and return the top element"""
+        if self.is_empty():
+            raise IndexError("pop from empty stack")
+        return self.elements.pop()
+
+    def peek(self):
+        """Return the top element without removing"""
+        if self.is_empty():
+            raise IndexError("peek from empty stack")
+        return self.elements[-1]
+
+    def is_empty(self):
+        """Check if empty"""
+        return len(self.elements) == 0
+        
+    def size(self):
+        """Get current size"""
+        return len(self.elements)
+```
+</CodeTab>
+<CodeTab language="JavaScript" title="stack.js">
+```javascript
+class Stack {
+    constructor() {
+        this.elements = [];
+    }
+
+    // Push element to the top
+    push(val) {
+        this.elements.push(val);
+    }
+
+    // Remove and return the top element
+    pop() {
+        if (this.isEmpty()) {
+            throw new Error("Stack is empty");
+        }
+        return this.elements.pop();
+    }
+
+    // Return the top element without removing
+    peek() {
+        if (this.isEmpty()) {
+            throw new Error("Stack is empty");
+        }
+        return this.elements[this.elements.length - 1];
+    }
+
+    // Check if empty
+    isEmpty() {
+        return this.elements.length === 0;
+    }
+    
+    // Get current size
+    size() {
+        return this.elements.length;
+    }
+}
+```
+</CodeTab>
+</CodeTabs>
+
+<br />
+
+## Real-World Applications
+
+Stacks are ubiquitous in computer science:
+
+1. **Function Call Stack:** When a function calls another function, the CPU pushes the current execution context onto a stack. When the called function returns, the context is popped off.
+2. **Undo/Redo Mechanisms:** Text editors store your actions in a stack. Hitting `Ctrl+Z` pops the last action and reverses it.
+3. **Browser History:** The "Back" button works by popping the current URL from a stack of visited pages.
+4. **Syntax Parsing:** Compilers use stacks to check for matching parentheses `()`, brackets `[]`, and braces `{}`.
+
+<br />
+
+## Problem Solving Pattern: Monotonic Stack
+
+A **Monotonic Stack** is a specialized use of a stack where the elements are kept strictly increasing or strictly decreasing. It's incredibly powerful for problems where you need to find the "Next Greater Element" or "Next Smaller Element" in an array.
+
+**Example: Next Greater Element**
+Given an array, find the next greater element for each number. If none exists, output `-1`.
+Input: `[2, 1, 2, 4, 3]`
+Output: `[4, 2, 4, -1, -1]`
 
 ```python
-def is_valid(text: str) -> bool:
-    open_chars: list[str] = []
-    matching = {')': '(', ']': '[', '}': '{'}
-    for char in text:
-        if char in '([{':
-            open_chars.append(char)
-        elif char in matching:
-            if not open_chars or open_chars.pop() != matching[char]:
-                return False
-    return not open_chars
+def nextGreaterElements(nums):
+    res = [-1] * len(nums)
+    stack = []  # will store INDICES, not values
+    
+    for i in range(len(nums)):
+        # While stack is not empty AND current element is greater 
+        # than the element at the index stored at the top of the stack
+        while stack and nums[i] > nums[stack[-1]]:
+            # We found the "next greater" for the top element!
+            top_index = stack.pop()
+            res[top_index] = nums[i]
+            
+        stack.append(i)
+        
+    return res
 ```
 
-## Dry run
+<br />
 
-For `"{[]}"`, push `{`, push `[`, pop `[` for `]`, then pop `{` for `}`. The stack is empty, so the expression is valid.
+## Common Interview Questions
 
-## Common mistakes
-
-- Popping before checking whether the stack is empty.
-- Treating a queue as a stack by removing from the wrong end.
-- Forgetting that a monotonic stack usually stores indexes, not just values.
-
-## Interview questions
-
-- How do you validate parentheses?
-- How can a stack implement an undo feature?
-- What is a monotonic stack useful for?
-
-## Practice problems
-
-- Valid Parentheses
-- Daily Temperatures
-- Largest Rectangle in Histogram
-
-## Advanced notes
-
-Monotonic stacks maintain increasing or decreasing candidates and make nearest-greater or nearest-smaller queries linear. The call stack is an implicit stack managed by the runtime.
+1. **Valid Parentheses:** Given a string containing just the characters `(`, `)`, `{`, `}`, `[` and `]`, determine if the input string is valid.
+2. **Min Stack:** Design a stack that supports push, pop, top, and retrieving the minimum element in constant time.
+3. **Evaluate Reverse Polish Notation:** Evaluate the value of an arithmetic expression in RPN.
+4. **Daily Temperatures:** Given an array of daily temperatures, return an array such that answer[i] is the number of days you have to wait after the ith day to get a warmer temperature. (Uses Monotonic Stack).

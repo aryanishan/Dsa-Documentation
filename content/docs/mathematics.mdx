@@ -1,0 +1,164 @@
+---
+title: Mathematics for Algorithms
+description: Build the number-theory and combinatorics toolkit behind modular arithmetic, gcd, primes, counting, and fast exponentiation.
+slug: mathematics
+category: Foundations
+tags: [mathematics, number-theory, modular-arithmetic, gcd, primes]
+order: 24
+level: Foundation
+related: [time-complexity, recursion, bit-manipulation]
+prerequisites: [time-complexity]
+---
+
+## Definition
+
+Algorithmic mathematics is a collection of precise tools for reasoning about integers, counts, divisibility, and growth. The essential starting set is the Euclidean algorithm, modular arithmetic, prime sieves, combinatorics, and fast exponentiation.
+
+## Intuition
+
+Mathematics replaces repeated work with a property that remains true. Rather than trying every divisor, use the fact that a composite number has a factor no larger than its square root. Rather than multiplying a number `n` times, reuse squares of powers.
+
+## Visualization
+
+~~~text
+gcd(48, 18)
+48 = 2 * 18 + 12
+18 = 1 * 12 +  6
+12 = 2 *  6 +  0
+The last non-zero remainder is 6.
+~~~
+
+## Real-world example
+
+Modular arithmetic appears in clocks, hash tables, circular buffers, checksums, and cryptographic protocols. Greatest common divisors help reduce ratios such as image aspect ratios to their simplest form.
+
+## Applications
+
+- Counting paths, subsets, and arrangements.
+- Fast powers under a modulus for cryptography and competitive programming.
+- Prime generation and factorization.
+- LCM/GCD scheduling, fractions, and periodic events.
+
+## Advantages
+
+- Often turns brute-force algorithms into logarithmic or near-linear ones.
+- Produces exact, testable invariants.
+- Reusable across graphs, dynamic programming, hashing, and geometry.
+
+## Disadvantages
+
+- Integer overflow and negative modulo semantics vary by language.
+- Correct formula choice requires careful assumptions and constraints.
+- Floating-point arithmetic can introduce precision errors where integer math is required.
+
+## Complexity table
+
+| Technique | Time | Space |
+| --- | --- | --- |
+| Euclidean GCD | O(log min(a, b)) | O(1) |
+| Fast exponentiation | O(log exponent) | O(1) iterative |
+| Sieve of Eratosthenes through n | O(n log log n) | O(n) |
+| Trial division factorization | O(sqrt(n)) | O(1) |
+
+## Step-by-step explanation
+
+To compute `base^exponent mod modulus`, keep an answer initialized to one. If the current exponent bit is set, multiply the answer by the base modulo `modulus`. Square the base modulo `modulus`, then shift the exponent right. Each step consumes one binary digit of the exponent.
+
+## Dry run
+
+Compute `3^13 mod 10`:
+
+| exponent | answer | base | action |
+| --- | --- | --- | --- |
+| 13 | 1 | 3 | odd: answer = 3 |
+| 6 | 3 | 9 | square base |
+| 3 | 3 | 1 | odd: answer = 3 |
+| 1 | 3 | 1 | odd: answer = 3 |
+
+The answer is `3`.
+
+## Implementations
+
+### C++
+
+~~~cpp
+long long modPow(long long base, long long exponent, long long mod) {
+  long long answer = 1 % mod;
+  base %= mod;
+  while (exponent > 0) {
+    if (exponent & 1LL) answer = (__int128)answer * base % mod;
+    base = (__int128)base * base % mod;
+    exponent >>= 1LL;
+  }
+  return answer;
+}
+~~~
+
+### Java
+
+~~~java
+static long modPow(long base, long exponent, long mod) {
+    long answer = 1 % mod;
+    base %= mod;
+    while (exponent > 0) {
+        if ((exponent & 1) == 1) answer = (answer * base) % mod;
+        base = (base * base) % mod;
+        exponent >>= 1;
+    }
+    return answer;
+}
+~~~
+
+### Python
+
+~~~python
+def mod_pow(base: int, exponent: int, modulus: int) -> int:
+    answer = 1 % modulus
+    base %= modulus
+    while exponent:
+        if exponent & 1:
+            answer = answer * base % modulus
+        base = base * base % modulus
+        exponent >>= 1
+    return answer
+~~~
+
+### JavaScript
+
+~~~javascript
+function modPow(base, exponent, modulus) {
+  let answer = 1n % modulus;
+  base %= modulus;
+  while (exponent > 0n) {
+    if (exponent & 1n) answer = answer * base % modulus;
+    base = base * base % modulus;
+    exponent >>= 1n;
+  }
+  return answer;
+}
+~~~
+
+## Common mistakes
+
+- Multiplying two large values before applying a modulus and overflowing the numeric type.
+- Forgetting that `%` can be negative in C++, Java, and JavaScript.
+- Treating zero as prime or failing to mark one as non-prime in a sieve.
+- Dividing modulo a prime without multiplying by a modular inverse.
+
+## Interview questions
+
+1. Compute the greatest common divisor and least common multiple safely.
+2. Count primes less than `n`.
+3. Compute a power modulo a large prime.
+4. Find the first missing positive integer using number properties.
+
+## Practice problems
+
+- Pow(x, n) (LeetCode 50)
+- Count Primes (LeetCode 204)
+- Happy Number (LeetCode 202)
+- Nth Magical Number (LeetCode 878)
+
+## Further reading
+
+Continue with modular inverses, the Chinese Remainder Theorem, combinatorics modulo a prime, and Miller-Rabin primality testing when constraints grow beyond a simple sieve.

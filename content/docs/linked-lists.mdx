@@ -1,136 +1,476 @@
 ---
-title: Linked Lists
-description: Understand node-based lists, pointer manipulation, fast and slow pointers, and list reversal.
-slug: linked-lists
-category: Beginner
-tags:
-  - linked-list
-  - pointers
-  - fast-slow-pointers
-order: 5
-readingTime: 8 min read
+title: "Linked Lists"
+description: "A linear data structure consisting of a sequence of nodes, where each node stores a reference to the next node."
+category: "Data Structures"
+order: 2
+tags: ["data-structures", "linked-list", "pointers"]
+prerequisites: ["arrays"]
+related: ["stack", "queue"]
+featured: true
+level: "Beginner"
 ---
 
-## Definition
+# Linked Lists
 
-A linked list is a sequence of nodes where each node stores a value and a link to the next node. A doubly linked list also keeps a previous link for reverse traversal.
+A linked list is a fundamental linear data structure consisting of a sequence of nodes. Unlike arrays, linked lists do not store elements in contiguous memory locations. Instead, each element (node) contains two parts:
+1. The **data** itself.
+2. A **pointer** (or reference) to the next node in the sequence.
 
-## Intuition
+This dynamic structure allows for efficient insertions and deletions at any point in the list, but it sacrifices the ability to access elements directly by index.
 
-Nodes need not be adjacent in memory. Inserting after a known node is cheap because only links change, but reaching a position requires following links from the head.
+## Real-world Analogy
 
-## Real-world analogy
+Think of a linked list like a **scavenger hunt**. 
+You are given the first clue (the head node). When you solve it, it doesn't give you all the clues at once; it just tells you where to find the *next* clue (the pointer). You must follow each clue one by one in order to reach the end of the hunt (the null pointer).
 
-It is like a scavenger hunt: each card tells you where the next card is. Adding a new card after one clue is easy, but you cannot jump directly to the twentieth clue.
+<br />
 
-## Visual explanation
+## Why use Linked Lists?
 
+When you already have arrays, why do you need linked lists?
+
+**Advantages over Arrays:**
+- **Dynamic Size:** Linked lists can grow and shrink dynamically during runtime. You don't need to define an initial size.
+- **Fast Insertions/Deletions:** Inserting or deleting a node, especially at the beginning of the list, is an $O(1)$ operation (if you already have a pointer to the location).
+- **No Memory Waste:** Memory is allocated only when required, so there's no unused capacity.
+
+**Disadvantages:**
+- **No Random Access:** You cannot access an element directly (e.g., `list[3]`). You must traverse from the head node, making access $O(N)$.
+- **Extra Memory:** Every node requires extra memory to store the pointer(s).
+- **Cache Unfriendly:** Since nodes are scattered in memory, linked lists don't benefit from CPU cache locality like contiguous arrays do.
+
+<br />
+
+## Types of Linked Lists
+
+### 1. Singly Linked List
+The most basic form. Each node points only to the next node. The last node points to `null`.
 ```text
-head
-  |
- [1|next] -> [2|next] -> [3|null]
+[Data|Next] -> [Data|Next] -> [Data|Next] -> null
 ```
 
-## Time complexity
+### 2. Doubly Linked List
+Each node has two pointers: one to the next node and one to the previous node. This allows traversal in both directions.
+```text
+null <- [Prev|Data|Next] <-> [Prev|Data|Next] -> null
+```
 
-| Operation | Singly linked list | Notes |
-| --- | --- | --- |
-| Access by index | `O(n)` | Follow links |
-| Insert after known node | `O(1)` | Rewire one link |
-| Delete after known node | `O(1)` | Rewire one link |
-| Search by value | `O(n)` | Scan nodes |
+### 3. Circular Linked List
+The last node points back to the first node instead of `null`, forming a circle.
+```text
+┌─────────────────────────────────┐
+↓                                 │
+[Data|Next] -> [Data|Next] -> [Data|Next]
+```
 
-## Space complexity
+<br />
 
-| Pattern | Extra space | Notes |
-| --- | --- | --- |
-| Iterative reverse | `O(1)` | Three pointers |
-| Recursive reverse | `O(n)` | Call stack |
-| Hash-set cycle check | `O(n)` | Stores visited nodes |
+## Time & Space Complexity
+
+### Time Complexity
+
+| Operation | Best Case | Average Case | Worst Case | Notes |
+| :--- | :--- | :--- | :--- | :--- |
+| **Access** | $O(1)$ | $O(N)$ | $O(N)$ | Must traverse from the head. |
+| **Search** | $O(1)$ | $O(N)$ | $O(N)$ | Linear search is required. |
+| **Insert (head)** | $O(1)$ | $O(1)$ | $O(1)$ | Simply update the new node's next pointer and head. |
+| **Insert (tail)** | $O(1)$ | $O(N)$ | $O(N)$ | $O(1)$ if you maintain a tail pointer, otherwise $O(N)$ to find the end. |
+| **Delete (head)** | $O(1)$ | $O(1)$ | $O(1)$ | Update head to `head.next`. |
+| **Delete (tail)** | $O(1)$ | $O(N)$ | $O(N)$ | Need to find the second-to-last node to update its pointer. |
+
+### Space Complexity
+- **Overall:** $O(N)$ to store $N$ elements.
+- **Per Node overhead:** $O(1)$ extra space per node for the pointer (or two pointers in a doubly linked list).
+
+<br />
 
 ## Implementations
 
-### C++
+Here is how you implement a basic Singly Linked List from scratch.
 
+<CodeTabs>
+<CodeTab language="C++" title="LinkedList.cpp">
 ```cpp
-struct ListNode {
-    int value;
-    ListNode* next;
+#include <iostream>
+
+// Define the Node structure
+struct Node {
+    int data;
+    Node* next;
+    
+    Node(int val) : data(val), next(nullptr) {}
 };
 
-ListNode* reverse(ListNode* head) {
-    ListNode* previous = nullptr;
-    while (head != nullptr) {
-        ListNode* next = head->next;
-        head->next = previous;
-        previous = head;
-        head = next;
+class LinkedList {
+private:
+    Node* head;
+
+public:
+    LinkedList() : head(nullptr) {}
+
+    // Insert at the beginning: O(1)
+    void insertFront(int val) {
+        Node* newNode = new Node(val);
+        newNode->next = head;
+        head = newNode;
     }
-    return previous;
-}
+
+    // Insert at the end: O(N)
+    void insertEnd(int val) {
+        Node* newNode = new Node(val);
+        
+        if (head == nullptr) {
+            head = newNode;
+            return;
+        }
+        
+        Node* current = head;
+        while (current->next != nullptr) {
+            current = current->next;
+        }
+        current->next = newNode;
+    }
+
+    // Delete a node by value: O(N)
+    void deleteValue(int val) {
+        if (head == nullptr) return;
+        
+        // If head needs to be deleted
+        if (head->data == val) {
+            Node* temp = head;
+            head = head->next;
+            delete temp;
+            return;
+        }
+        
+        Node* current = head;
+        while (current->next != nullptr && current->next->data != val) {
+            current = current->next;
+        }
+        
+        // If value was found
+        if (current->next != nullptr) {
+            Node* temp = current->next;
+            current->next = current->next->next;
+            delete temp;
+        }
+    }
+
+    // Print the list: O(N)
+    void print() {
+        Node* current = head;
+        while (current != nullptr) {
+            std::cout << current->data << " -> ";
+            current = current->next;
+        }
+        std::cout << "null\n";
+    }
+};
 ```
-
-### Java
-
+</CodeTab>
+<CodeTab language="Java" title="LinkedList.java">
 ```java
-static class ListNode {
-    int value;
-    ListNode next;
-    ListNode(int value) { this.value = value; }
-}
-
-static ListNode reverse(ListNode head) {
-    ListNode previous = null;
-    while (head != null) {
-        ListNode next = head.next;
-        head.next = previous;
-        previous = head;
-        head = next;
+public class LinkedList {
+    // Define the Node class
+    class Node {
+        int data;
+        Node next;
+        
+        Node(int data) {
+            this.data = data;
+            this.next = null;
+        }
     }
-    return previous;
+    
+    private Node head;
+    
+    public LinkedList() {
+        this.head = null;
+    }
+    
+    // Insert at the beginning: O(1)
+    public void insertFront(int data) {
+        Node newNode = new Node(data);
+        newNode.next = head;
+        head = newNode;
+    }
+    
+    // Insert at the end: O(N)
+    public void insertEnd(int data) {
+        Node newNode = new Node(data);
+        
+        if (head == null) {
+            head = newNode;
+            return;
+        }
+        
+        Node current = head;
+        while (current.next != null) {
+            current = current.next;
+        }
+        current.next = newNode;
+    }
+    
+    // Delete a node by value: O(N)
+    public void deleteValue(int data) {
+        if (head == null) return;
+        
+        // If head needs to be deleted
+        if (head.data == data) {
+            head = head.next;
+            return;
+        }
+        
+        Node current = head;
+        while (current.next != null && current.next.data != data) {
+            current = current.next;
+        }
+        
+        // If value was found
+        if (current.next != null) {
+            current.next = current.next.next;
+        }
+    }
+    
+    // Print the list: O(N)
+    public void print() {
+        Node current = head;
+        while (current != null) {
+            System.out.print(current.data + " -> ");
+            current = current.next;
+        }
+        System.out.println("null");
+    }
 }
 ```
+</CodeTab>
+<CodeTab language="Python" title="linked_list.py">
+```python
+class Node:
+    def __init__(self, data):
+        self.data = data
+        self.next = None
 
-### Python
+class LinkedList:
+    def __init__(self):
+        self.head = None
+        
+    # Insert at the beginning: O(1)
+    def insert_front(self, data):
+        new_node = Node(data)
+        new_node.next = self.head
+        self.head = new_node
+        
+    # Insert at the end: O(N)
+    def insert_end(self, data):
+        new_node = Node(data)
+        
+        if not self.head:
+            self.head = new_node
+            return
+            
+        current = self.head
+        while current.next:
+            current = current.next
+        current.next = new_node
+        
+    # Delete a node by value: O(N)
+    def delete_value(self, data):
+        if not self.head:
+            return
+            
+        # If head needs to be deleted
+        if self.head.data == data:
+            self.head = self.head.next
+            return
+            
+        current = self.head
+        while current.next and current.next.data != data:
+            current = current.next
+            
+        # If value was found
+        if current.next:
+            current.next = current.next.next
+            
+    # Print the list: O(N)
+    def print_list(self):
+        current = self.head
+        while current:
+            print(f"{current.data} -> ", end="")
+            current = current.next
+        print("null")
+```
+</CodeTab>
+<CodeTab language="JavaScript" title="linkedList.js">
+```javascript
+class Node {
+    constructor(data) {
+        this.data = data;
+        this.next = null;
+    }
+}
+
+class LinkedList {
+    constructor() {
+        this.head = null;
+    }
+    
+    // Insert at the beginning: O(1)
+    insertFront(data) {
+        const newNode = new Node(data);
+        newNode.next = this.head;
+        this.head = newNode;
+    }
+    
+    // Insert at the end: O(N)
+    insertEnd(data) {
+        const newNode = new Node(data);
+        
+        if (!this.head) {
+            this.head = newNode;
+            return;
+        }
+        
+        let current = this.head;
+        while (current.next) {
+            current = current.next;
+        }
+        current.next = newNode;
+    }
+    
+    // Delete a node by value: O(N)
+    deleteValue(data) {
+        if (!this.head) return;
+        
+        // If head needs to be deleted
+        if (this.head.data === data) {
+            this.head = this.head.next;
+            return;
+        }
+        
+        let current = this.head;
+        while (current.next && current.next.data !== data) {
+            current = current.next;
+        }
+        
+        // If value was found
+        if (current.next) {
+            current.next = current.next.next;
+        }
+    }
+    
+    // Print the list: O(N)
+    print() {
+        let current = this.head;
+        let result = [];
+        while (current) {
+            result.push(current.data);
+            current = current.next;
+        }
+        console.log(result.join(' -> ') + ' -> null');
+    }
+}
+```
+</CodeTab>
+</CodeTabs>
+
+<br />
+
+## Common Operations: Reversing a Linked List
+
+Reversing a linked list is one of the most common interview questions. The algorithm works by iterating through the list and changing the `next` pointer of each node to point to the `previous` node.
+
+### Step-by-Step Dry Run
+
+Suppose we have: `1 -> 2 -> 3 -> null`
+
+1. **Initialization:**
+   - `prev = null`
+   - `current = head` (which is node 1)
+   - `next = null`
+
+2. **Iteration 1 (current = 1):**
+   - Save next: `next = current.next` (node 2)
+   - Reverse pointer: `current.next = prev` (node 1 now points to null)
+   - Advance prev: `prev = current` (prev is now node 1)
+   - Advance current: `current = next` (current is now node 2)
+   - *State:* `1 -> null`, `2 -> 3 -> null`
+
+3. **Iteration 2 (current = 2):**
+   - Save next: `next = current.next` (node 3)
+   - Reverse pointer: `current.next = prev` (node 2 now points to node 1)
+   - Advance prev: `prev = current` (prev is now node 2)
+   - Advance current: `current = next` (current is now node 3)
+   - *State:* `2 -> 1 -> null`, `3 -> null`
+
+4. **Iteration 3 (current = 3):**
+   - Save next: `next = current.next` (null)
+   - Reverse pointer: `current.next = prev` (node 3 now points to node 2)
+   - Advance prev: `prev = current` (prev is now node 3)
+   - Advance current: `current = next` (current is now null)
+   - *State:* `3 -> 2 -> 1 -> null`
+
+5. **End of Loop:** `current` is `null`. We return `prev` (node 3) as the new head.
 
 ```python
-class ListNode:
-    def __init__(self, value: int, next_node=None):
-        self.value = value
-        self.next = next_node
-
-def reverse(head: ListNode | None) -> ListNode | None:
-    previous = None
-    while head is not None:
-        next_node = head.next
-        head.next = previous
-        previous = head
-        head = next_node
-    return previous
+def reverse_list(head):
+    prev = None
+    current = head
+    
+    while current is not None:
+        next_node = current.next  # 1. Save the next node
+        current.next = prev       # 2. Reverse the pointer
+        prev = current            # 3. Move prev forward
+        current = next_node       # 4. Move current forward
+        
+    return prev  # New head
 ```
 
-## Dry run
+<br />
 
-Reverse `1 -> 2 -> 3`: point `1` to `null`, then point `2` to `1`, then point `3` to `2`. The final `previous` pointer is the new head, `3`.
+## Two-Pointer Technique (Fast and Slow Pointers)
 
-## Common mistakes
+Another fundamental pattern for linked lists is the **Tortoise and Hare** algorithm (Fast and Slow pointers). 
 
-- Losing the next node before changing `head.next`.
-- Dereferencing `null` on an empty or one-node list.
-- Using a value comparison instead of node identity to detect a cycle.
+By moving one pointer at 1x speed (`slow`) and another at 2x speed (`fast`), you can solve several tricky problems:
+1. **Finding the middle node:** When `fast` reaches the end, `slow` is exactly at the middle.
+2. **Detecting cycles:** If there's a loop in the list, `fast` will eventually lap `slow` and they will point to the same node.
 
-## Interview questions
+```python
+def has_cycle(head):
+    slow = head
+    fast = head
+    
+    while fast and fast.next:
+        slow = slow.next          # Move 1 step
+        fast = fast.next.next     # Move 2 steps
+        
+        if slow == fast:
+            return True           # Cycle detected
+            
+    return False                  # No cycle
+```
 
-- How do you detect a cycle without extra space?
-- How do you find the middle node?
-- How do you merge two sorted linked lists?
+<br />
 
-## Practice problems
+## Common Pitfalls & Mistakes
 
-- Reverse Linked List
-- Linked List Cycle
-- Merge Two Sorted Lists
+> [!WARNING]
+> **Losing the Head**
+> 
+> Never use your `head` pointer to traverse the list! Always create a temporary `current` pointer (e.g. `curr = head`). If you reassign `head`, you lose a reference to the beginning of your list, effectively deleting it.
 
-## Advanced notes
+> [!CAUTION]
+> **Null Pointer Exceptions**
+> 
+> Always check if `current` AND `current.next` are null before accessing their properties. Trying to access `current.next.next` when `current.next` is null will crash your program.
 
-Floyd's tortoise-and-hare technique detects a cycle in `O(n)` time and `O(1)` space. Dummy head nodes simplify edge cases in insertion and merge routines.
+<br />
+
+## Common Interview Questions
+
+1. **Reverse a Linked List:** A fundamental test of pointer manipulation.
+2. **Detect a Cycle in a Linked List:** Classic application of the fast/slow pointer technique.
+3. **Merge Two Sorted Lists:** Tests ability to weave two lists together gracefully.
+4. **Remove Nth Node From End:** Requires a two-pointer gap strategy.
+5. **Find the Intersection of Two Linked Lists:** Tests length matching and alignment logic.

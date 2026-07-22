@@ -1,0 +1,154 @@
+---
+title: Deque
+description: Understand the double-ended queue, its constant-time end operations, and how it powers monotonic-window algorithms.
+slug: deque
+category: Data Structures
+tags: [deque, queue, stack, sliding-window, monotonic-queue]
+order: 22
+level: Intermediate
+related: [queue, stack, arrays]
+prerequisites: [arrays, queue]
+---
+
+## Definition
+
+A deque (pronounced "deck") is a double-ended queue: it supports inserting and removing values at both the front and the back. It can act as a queue, a stack, or a specialized window-processing structure.
+
+## Intuition
+
+Think of a line of people with doors at both ends. New people may enter through either door and the next person may leave through either door, without shifting everyone in the middle.
+
+## Visualization
+
+~~~text
+front                                      back
+  |                                          |
+  v                                          v
+[ 7 ] <-> [ 12 ] <-> [ 4 ] <-> [ 9 ]
+push_front(2)       pop_back() removes 9
+~~~
+
+## Real-world example
+
+An undo/redo history is often modeled with two end-oriented collections: move an action from the undo end to the redo end, and move it back when the user redoes it.
+
+## Applications
+
+- Sliding-window maximum and minimum with a monotonic deque.
+- 0-1 BFS, where zero-cost edges go to the front and one-cost edges go to the back.
+- Palindrome checks by comparing both ends.
+- Task schedulers that prioritize urgent jobs at the front.
+
+## Advantages
+
+- O(1) amortized operations at both ends.
+- Replaces separate stack and queue structures in many APIs.
+- Excellent fit for monotonic window algorithms.
+
+## Disadvantages
+
+- Random access is usually slower or unavailable compared with an array.
+- A circular-buffer implementation must carefully distinguish full and empty states.
+- Middle insertion still costs O(n).
+
+## Complexity table
+
+| Operation | Time | Space |
+| --- | --- | --- |
+| Push/pop front | O(1) amortized | O(1) extra |
+| Push/pop back | O(1) amortized | O(1) extra |
+| Peek either end | O(1) | O(1) extra |
+| Search | O(n) | O(1) extra |
+
+## Step-by-step explanation
+
+A common implementation stores values in a circular array. Two indices mark the current front and the slot after the back. Advancing an index wraps with modulo capacity. When the array fills, allocate a larger array and copy the current logical sequence once; that makes individual end operations amortized O(1).
+
+## Dry run
+
+Starting with `[]`:
+
+| Operation | Deque |
+| --- | --- |
+| push_back(5) | `[5]` |
+| push_front(2) | `[2, 5]` |
+| push_back(8) | `[2, 5, 8]` |
+| pop_front() | returns `2`, leaves `[5, 8]` |
+| pop_back() | returns `8`, leaves `[5]` |
+
+## Implementations
+
+### C++
+
+~~~cpp
+#include <deque>
+
+std::deque<int> values;
+values.push_front(2);
+values.push_back(5);
+int first = values.front();
+values.pop_front();
+~~~
+
+### Java
+
+~~~java
+import java.util.ArrayDeque;
+import java.util.Deque;
+
+Deque<Integer> values = new ArrayDeque<>();
+values.addFirst(2);
+values.addLast(5);
+int first = values.removeFirst();
+~~~
+
+### Python
+
+~~~python
+from collections import deque
+
+values = deque()
+values.appendleft(2)
+values.append(5)
+first = values.popleft()
+~~~
+
+### JavaScript
+
+~~~javascript
+class Deque {
+  constructor() { this.items = new Map(); this.first = 0; this.last = 0; }
+  pushBack(value) { this.items.set(this.last++, value); }
+  popFront() {
+    if (this.first === this.last) return undefined;
+    const value = this.items.get(this.first);
+    this.items.delete(this.first++);
+    return value;
+  }
+}
+~~~
+
+## Common mistakes
+
+- Using `Array.shift()` in JavaScript inside a large loop; it is O(n), not a real deque operation.
+- Storing values instead of indices in a monotonic deque when expiry depends on window position.
+- Calling `front` or `back` on an empty collection.
+- Forgetting to discard expired indices before reading the window answer.
+
+## Interview questions
+
+1. Find the maximum in every window of size `k`.
+2. Design a circular deque.
+3. Solve shortest paths with edge weights zero or one.
+4. Determine whether a string is a palindrome with a deque.
+
+## Practice problems
+
+- Sliding Window Maximum (LeetCode 239)
+- Design Circular Deque (LeetCode 641)
+- 01 Matrix / 0-1 BFS variants
+- Shortest Subarray with Sum at Least K (LeetCode 862)
+
+## Further reading
+
+Compare a deque with a linked list and a ring buffer, then practice the monotonic deque pattern. It turns many apparent O(nk) window scans into O(n).

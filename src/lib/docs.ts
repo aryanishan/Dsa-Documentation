@@ -6,9 +6,18 @@ import { slugify } from "@/lib/utils";
 import type { DocFrontmatter, DocumentationPage, SearchDocument, TableOfContentsItem } from "@/types/docs";
 
 const DOCS_DIRECTORY = path.join(process.cwd(), "content", "docs");
+const CATEGORY_ORDER = [
+  "Foundations",
+  "Beginner",
+  "Intermediate",
+  "Data Structures",
+  "Algorithms",
+  "Advanced Data Structures",
+];
 
 function asStringArray(value: unknown): string[] {
-  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+  if (!Array.isArray(value)) return [];
+  return [...new Set(value.filter((item): item is string => typeof item === "string").map((item) => item.trim()).filter(Boolean))];
 }
 
 function getFrontmatter(data: Record<string, unknown>, fileName: string): DocFrontmatter {
@@ -32,7 +41,7 @@ function getFrontmatter(data: Record<string, unknown>, fileName: string): DocFro
     title: typeof data.title === "string" ? data.title : fileName,
     description: typeof data.description === "string" ? data.description : "DSA documentation page.",
     category,
-    order: typeof data.order === "number" ? data.order : 999,
+    order: typeof data.order === "number" && Number.isFinite(data.order) ? data.order : 999,
     tags: asStringArray(data.tags),
     related: asStringArray(data.related),
     prerequisites: asStringArray(data.prerequisites),
@@ -48,8 +57,12 @@ function stripInlineMarkdown(value: string) {
     .trim();
 }
 
+function withoutCodeBlocks(source: string) {
+  return source.replace(/(^|\n)(`{3,}|~{3,})[^\n]*\n[\s\S]*?\n\2[^\n]*(?=\n|$)/g, "$1");
+}
+
 export function getTableOfContents(source: string): TableOfContentsItem[] {
-  const withoutCode = source.replace(/```[\s\S]*?```/g, "");
+  const withoutCode = withoutCodeBlocks(source);
   const items: TableOfContentsItem[] = [];
   const usedIds = new Map<string, number>();
 
@@ -71,8 +84,7 @@ export function getTableOfContents(source: string): TableOfContentsItem[] {
 }
 
 function getReadingTime(source: string) {
-  const words = source
-    .replace(/```[\s\S]*?```/g, "")
+  const words = withoutCodeBlocks(source)
     .replace(/<[^>]+>/g, "")
     .trim()
     .split(/\s+/)
@@ -82,7 +94,7 @@ function getReadingTime(source: string) {
 
 function sourceToSearchableText(source: string) {
   return source
-    .replace(/```[a-zA-Z0-9+#-]*\n?/g, " ")
+    .replace(/^(?:```|~~~)[^\n]*$/gm, " ")
     .replace(/<[^>]+>/g, " ")
     .replace(/[>#*_[\]()`|]/g, " ")
     .replace(/\s+/g, " ")
@@ -118,11 +130,19 @@ export function getDocBySlug(slug: string) {
 }
 
 export function getDocsByCategory() {
-  return getAllDocs().reduce<Record<string, DocumentationPage[]>>((groups, doc) => {
+  const groups = getAllDocs().reduce<Record<string, DocumentationPage[]>>((groups, doc) => {
     groups[doc.category] ??= [];
     groups[doc.category].push(doc);
     return groups;
   }, {});
+
+  return Object.fromEntries(
+    Object.entries(groups).sort(([firstCategory], [secondCategory]) => {
+      const firstIndex = CATEGORY_ORDER.indexOf(firstCategory);
+      const secondIndex = CATEGORY_ORDER.indexOf(secondCategory);
+      return (firstIndex === -1 ? CATEGORY_ORDER.length : firstIndex) - (secondIndex === -1 ? CATEGORY_ORDER.length : secondIndex) || firstCategory.localeCompare(secondCategory);
+    }),
+  );
 }
 
 export function getSearchIndex(): SearchDocument[] {
@@ -143,4 +163,25 @@ export function getAdjacentDocs(slug: string) {
     previous: index > 0 ? docs[index - 1] : undefined,
     next: index >= 0 && index < docs.length - 1 ? docs[index + 1] : undefined,
   };
+}
+
+export function getRelatedDocs(doc: DocumentationPage, limit = 4): DocumentationPage[] {
+  const docs = getAllDocs();
+  const explicitlyRelated = (doc.related ?? [])
+    .map((relatedSlug) => docs.find((item) => item.slug === relatedSlug))
+    .filter((item): item is DocumentationPage => Boolean(item) && item.slug !== doc.slug);
+  const selectedSlugs = new Set(explicitlyRelated.map((item) => item.slug));
+  const inferredRelated = docs
+    .filter((item) => item.slug !== doc.slug && !selectedSlugs.has(item.slug))
+    .map((item) => ({
+      item,
+      score:
+        (item.category === doc.category ? 12 : 0) +
+        item.tags.filter((tag) => doc.tags.includes(tag)).length * 3 +
+        (doc.prerequisites?.includes(item.slug) ? 2 : 0),
+    }))
+    .sort((first, second) => second.score - first.score || first.item.order - second.item.order || first.item.title.localeCompare(second.item.title))
+    .map(({ item }) => item);
+
+  return [...explicitlyRelated, ...inferredRelated].slice(0, limit);
 }
