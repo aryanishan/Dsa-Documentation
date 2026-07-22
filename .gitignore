@@ -12,6 +12,16 @@
 
 # local env files
 .env*.local
+**/.env
+**/.env.local
+**/.env.*.local
+
+# workspace build and generated artifacts
+/backend/node_modules/
+/backend/dist/
+/backend/coverage/
+/database/node_modules/
+/database/generated/
 
 # logs
 npm-debug.log*
