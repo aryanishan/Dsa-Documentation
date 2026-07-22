@@ -1,4 +1,4 @@
-import { ArrowRight, BookMarked, Braces, CheckCircle2, Code2, Network, SearchCheck, Sparkles } from "lucide-react";
+import { ArrowRight, ArrowUpRight, BookMarked, Braces, CheckCircle2, Code2, Layers3, Network, SearchCheck, Sparkles } from "lucide-react";
 import Link from "next/link";
 
 import { SearchDialog } from "@/components/search-dialog";
@@ -19,6 +19,10 @@ export default function HomePage() {
   // until authors opt into `featured: true` in frontmatter.
   const featured = (explicitlyFeatured.length ? explicitlyFeatured : docs).slice(0, 6);
   const searchIndex = getSearchIndex();
+  const popularSlugs = ["arrays", "binary-search", "graphs", "dynamic-programming"];
+  const popular = popularSlugs.map((slug) => docs.find((doc) => doc.slug === slug)).filter((doc): doc is (typeof docs)[number] => Boolean(doc));
+  const recent = [...docs].sort((a, b) => b.order - a.order).slice(0, 4);
+  const collections = Array.from(new Set(docs.map((doc) => doc.category))).slice(0, 5);
 
   return (
     <>
@@ -38,8 +42,13 @@ export default function HomePage() {
             <div className="mt-8 max-w-2xl"><SearchDialog documents={searchIndex} variant="hero" /></div>
             <div className="mt-6 flex flex-wrap gap-3">
               <Link href="/docs/time-complexity" className={cn(buttonVariants({ size: "lg" }))}>Start with the foundations <ArrowRight className="ml-2 size-4" /></Link>
-              <Link href="/roadmap" className={cn(buttonVariants({ variant: "outline", size: "lg" }))}>View learning roadmap</Link>
+              <Link href="/playground" className={cn(buttonVariants({ variant: "outline", size: "lg" }))}>Open code playground</Link>
             </div>
+            <dl className="mt-10 grid max-w-xl grid-cols-3 gap-3 border-t border-slate-200 pt-5 dark:border-slate-800">
+              <div><dt className="text-xs font-medium text-slate-500">Guided topics</dt><dd className="mt-1 text-2xl font-bold tracking-tight text-slate-950 dark:text-slate-50">{docs.length}+</dd></div>
+              <div><dt className="text-xs font-medium text-slate-500">Practice tracks</dt><dd className="mt-1 text-2xl font-bold tracking-tight text-slate-950 dark:text-slate-50">3</dd></div>
+              <div><dt className="text-xs font-medium text-slate-500">Languages</dt><dd className="mt-1 text-2xl font-bold tracking-tight text-slate-950 dark:text-slate-50">9</dd></div>
+            </dl>
           </div>
           <div className="relative mx-auto w-full max-w-lg animate-fade-up [animation-delay:130ms]">
             <div className="absolute -inset-5 -z-10 rounded-[2rem] bg-gradient-to-br from-sky-300/25 via-indigo-300/20 to-transparent blur-2xl dark:from-sky-700/20 dark:via-indigo-700/20" />
@@ -64,6 +73,22 @@ export default function HomePage() {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-[78rem] px-4 py-16 sm:px-6 lg:px-8">
+        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+          <div><p className="text-sm font-semibold text-sky-600 dark:text-sky-400">Explore by collection</p><h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-950 dark:text-slate-50">Build a mental model, layer by layer.</h2></div>
+          <Link href="/docs" className="inline-flex items-center gap-1.5 text-sm font-semibold text-sky-700 hover:text-sky-600 dark:text-sky-300">View the full library <ArrowRight className="size-4" /></Link>
+        </div>
+        <div className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          {collections.map((collection, index) => (
+            <Link key={collection} href="/docs" className="group rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-4 transition hover:-translate-y-0.5 hover:border-sky-300 hover:shadow-glow dark:border-slate-800 dark:from-slate-950 dark:to-slate-900/60 dark:hover:border-sky-800">
+              <span className="grid size-9 place-items-center rounded-xl bg-sky-50 text-sm font-bold text-sky-700 dark:bg-sky-950/50 dark:text-sky-300">{String(index + 1).padStart(2, "0")}</span>
+              <span className="mt-5 flex items-start justify-between gap-2 text-sm font-semibold text-slate-950 dark:text-slate-50">{collection}<ArrowUpRight className="size-4 shrink-0 text-slate-400 transition group-hover:text-sky-600" /></span>
+              <span className="mt-2 block text-xs leading-5 text-slate-500">{docs.filter((doc) => doc.category === collection).length} focused lessons</span>
+            </Link>
+          ))}
         </div>
       </section>
 
@@ -103,10 +128,39 @@ export default function HomePage() {
         </div>
       </section>
 
+      <section className="mx-auto grid max-w-[78rem] gap-10 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:px-8">
+        <div>
+          <p className="text-sm font-semibold text-sky-600 dark:text-sky-400">Popular algorithms</p>
+          <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-950 dark:text-slate-50">The patterns people return to.</h2>
+          <div className="mt-6 grid gap-3">
+            {popular.map((doc, index) => (
+              <Link key={doc.slug} href={`/docs/${doc.slug}`} className="group flex items-center gap-4 rounded-2xl border border-slate-200 p-4 transition hover:border-sky-300 hover:shadow-glow dark:border-slate-800 dark:hover:border-sky-800">
+                <span className="font-mono text-xs font-bold text-slate-400">{String(index + 1).padStart(2, "0")}</span>
+                <span className="min-w-0 flex-1"><span className="block font-semibold text-slate-950 group-hover:text-sky-700 dark:text-slate-50 dark:group-hover:text-sky-300">{doc.title}</span><span className="mt-1 block truncate text-xs text-slate-500">{doc.tags.slice(0, 3).join(" · ")}</span></span>
+                <ArrowRight className="size-4 text-slate-400 transition-transform group-hover:translate-x-1 group-hover:text-sky-600" />
+              </Link>
+            ))}
+          </div>
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-violet-600 dark:text-violet-400">Fresh in the library</p>
+          <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-950 dark:text-slate-50">New concepts to add to your toolkit.</h2>
+          <div className="mt-6 grid gap-3">
+            {recent.map((doc) => (
+              <Link key={doc.slug} href={`/docs/${doc.slug}`} className="group rounded-2xl border border-slate-200 p-4 transition hover:border-violet-300 hover:shadow-glow dark:border-slate-800 dark:hover:border-violet-800">
+                <span className="flex items-center justify-between gap-3"><span className="rounded-full bg-violet-50 px-2.5 py-1 text-[11px] font-semibold text-violet-700 dark:bg-violet-950/40 dark:text-violet-300">{doc.level}</span><ArrowUpRight className="size-4 text-slate-400 transition group-hover:text-violet-600" /></span>
+                <span className="mt-3 block font-semibold text-slate-950 group-hover:text-violet-700 dark:text-slate-50 dark:group-hover:text-violet-300">{doc.title}</span>
+                <span className="mt-1 block line-clamp-1 text-xs leading-5 text-slate-500">{doc.description}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section className="mx-auto max-w-[78rem] px-4 py-16 sm:px-6 lg:px-8">
         <div className="rounded-3xl bg-slate-950 px-6 py-10 text-white sm:px-10 sm:py-12">
           <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
-            <div><div className="flex items-center gap-2 text-sky-300"><Network className="size-4" /> Structured progression</div><h2 className="mt-3 text-3xl font-bold tracking-tight">Follow a roadmap, not random tabs.</h2><p className="mt-3 max-w-2xl leading-7 text-slate-300">Move from foundations to advanced patterns with a sequence that mirrors how real interview problems compound.</p></div>
+            <div><div className="flex items-center gap-2 text-sky-300"><Network className="size-4" /> Structured progression</div><h2 className="mt-3 text-3xl font-bold tracking-tight">Follow a roadmap, not random tabs.</h2><p className="mt-3 max-w-2xl leading-7 text-slate-300">Move from foundations to advanced patterns with a sequence that mirrors how real interview problems compound.</p><div className="mt-5 flex items-center gap-2 text-sm text-slate-300"><Layers3 className="size-4 text-sky-300" /> Concepts, visual explanations, runnable code, and practice in one flow.</div></div>
             <Link href="/roadmap" className={cn(buttonVariants({ variant: "secondary", size: "lg" }), "self-start bg-white text-slate-950 hover:bg-slate-100")}>Open roadmap <ArrowRight className="ml-2 size-4" /></Link>
           </div>
         </div>

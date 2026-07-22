@@ -1,121 +1,110 @@
-# AlgoNotes — DSA Documentation Platform
+<div align="center">
+  <img src="public/favicon.ico" alt="AlgoNotes Logo" width="80" height="80" />
+  <h1 align="center">AlgoNotes</h1>
+  <p align="center">
+    <strong>A modern, open platform for mastering Data Structures and Algorithms.</strong>
+  </p>
+  <p align="center">
+    Built with Next.js 15, TypeScript, Node.js, Express, Prisma, and PostgreSQL.
+  </p>
+</div>
 
-A fast, responsive, MDX-powered documentation platform for learning and revising data structures and algorithms. It is built with Next.js 15 App Router, TypeScript, Tailwind CSS, and Shadcn-compatible UI primitives.
+<hr />
 
-## Highlights
+## 🌟 Overview
 
-- 20 complete DSA lessons, each with definition, intuition, analogy, visual, complexity tables, C++/Java/Python implementations, dry run, mistakes, interview questions, practice prompts, and advanced notes.
-- Filesystem-based MDX content collection with automatically generated sidebar, table of contents, reading time, related lessons, and previous/next navigation.
-- Fast client-side full-text search across titles, tags, prose, complexity discussions, and fenced code snippets. Open it with `Ctrl/Cmd + K`.
-- Responsive documentation shell: mobile navigation, desktop sidebar, contextual table of contents, breadcrumb navigation, and scroll progress indicator.
-- Accessible dark/light/system theming, keyboard-focus states, skip link, semantic landmarks, and dialog labels.
-- SEO-first metadata, canonical URLs, Open Graph and Twitter metadata, per-lesson JSON-LD, `sitemap.xml`, `robots.txt`, and a web manifest.
-- Vercel-ready static generation for every lesson.
+AlgoNotes is a full-stack learning platform designed to make data structures and algorithms (DSA) stick. It combines comprehensive documentation, visual intuition, and an interactive code playground with sandboxed execution.
 
-## Stack
+### Key Features
+- **📚 24+ In-Depth Topics:** From Arrays to Dynamic Programming, complete with intuitions and visual guides.
+- **💻 Interactive Playground:** Write and run code directly in the browser (powered by Judge0) supporting C++, Java, Python, and JavaScript.
+- **🧩 Practice Problems:** LeetCode-style problem solving with immediate execution feedback.
+- **🌓 Dark Mode & Responsive:** Premium UI tailored for both desktop and mobile.
+- **⚡ Fast & SEO Optimized:** Built on Next.js 15 App Router with full-text search capability.
 
-- Next.js 15, React 19, TypeScript
-- Tailwind CSS 3 and Shadcn-style UI primitives
-- MDX rendered through `next-mdx-remote`, with GFM tables and syntax highlighting through `rehype-highlight`
-- `gray-matter` for MDX frontmatter
+## 🏗️ Architecture
 
-## Run locally
+AlgoNotes is divided into two decoupled services:
 
-Requires Node.js 20.9 or newer.
+1. **Frontend (`/src`)**: Next.js 15 App Router, React 19, Tailwind CSS, Monaco Editor.
+2. **Backend (`/backend`)**: Node.js, Express, TypeScript, Prisma ORM, JWT Auth, rate limiting.
 
-```bash
-npm install
-npm run dev
-```
+They communicate via REST APIs. The code execution is securely delegated to an isolated Judge0 instance.
 
-Open [http://localhost:3000](http://localhost:3000).
+## 🚀 Getting Started
 
-Useful checks:
+### Prerequisites
+- Node.js >= 20.9.0
+- PostgreSQL >= 15
+- npm or pnpm
 
-```bash
-npm run typecheck
-npm run lint
-npm run build
-npm start
-```
+### Local Setup (Development)
 
-## Environment variables
+1. **Install dependencies**
+   ```bash
+   npm install
+   cd backend && npm install
+   ```
 
-Copy the example file if you need canonical production URLs locally:
+2. **Configure Environment Variables**
+   ```bash
+   # Root level
+   cp .env.example .env.local
 
-```bash
-cp .env.example .env.local
-```
+   # Backend level
+   cd backend
+   cp .env.example .env
+   ```
+   Ensure you set `DATABASE_URL` in both `.env` files to point to your PostgreSQL instance.
 
-| Variable | Purpose | Example |
-| --- | --- | --- |
-| `NEXT_PUBLIC_SITE_URL` | Canonical public site URL used by metadata, sitemap, and structured data. | `https://docs.example.com` |
+3. **Database Initialization**
+   ```bash
+   cd backend
+   npx prisma db push
+   npx prisma generate
+   ```
 
-When omitted, the app uses `https://algonotes.vercel.app` as a safe placeholder. Set it in the Vercel project before production deployment.
+4. **Start the Development Servers**
+   ```bash
+   # Start backend
+   cd backend
+   npm run dev
 
-## Project structure
+   # In a new terminal, start frontend
+   npm run dev
+   ```
 
-```text
-content/docs/                    MDX lessons and frontmatter
-src/app/(site)/                  Marketing, roadmap, and documentation routes
-src/app/(site)/docs/[slug]/      Static documentation route
-src/app/sitemap.ts               Dynamic sitemap generated from MDX content
-src/app/robots.ts                Search-engine rules
-src/components/docs/             Docs layout, navigation, TOC, and progress UI
-src/components/mdx/              MDX renderers, highlighted code blocks, copy button
-src/components/ui/               Shadcn-compatible reusable UI primitives
-src/lib/docs.ts                  Content loading, navigation, TOC, reading-time, search index
-src/lib/site.ts                  Site metadata and roadmap sequence
-```
+5. Visit `http://localhost:3000` to access the platform.
 
-## Add or edit a lesson
+### Docker Deployment (Production)
 
-Create a new `content/docs/<slug>.mdx` file. Navigation is derived automatically from frontmatter; no sidebar configuration is needed.
+To deploy the entire stack (Postgres, Backend, Frontend, Nginx) using Docker Compose:
 
-```mdx
----
-title: Example Topic
-description: A concise search-friendly summary.
-category: Foundations
-order: 21
-tags: [example, pattern]
-related: [arrays, recursion]
-prerequisites: [time-complexity]
-featured: false
-level: Beginner
----
+1. **Setup Environment**
+   ```bash
+   cp docker/.env.example docker/.env
+   # Edit docker/.env with your production secrets (DB password, JWT secrets, API URL)
+   ```
 
-## Definition
+2. **Launch**
+   ```bash
+   docker-compose up -d --build
+   ```
 
-Your content here.
-```
+The application will be available at port `8080` (or whatever `APP_PORT` you specified in `.env`).
 
-Use `##` and `###` headings for the automatic right-side table of contents. Fenced code blocks receive language labels, syntax highlighting, and a copy button automatically. The existing lessons establish the standard heading contract.
+## 🛠️ Technology Stack
 
-## Search design
+- **Frontend:** Next.js 15, React 19, Tailwind CSS, Radix UI, Monaco Editor, Lucide Icons, MDX.
+- **Backend:** Node.js, Express, TypeScript, Zod, Prisma, JSON Web Tokens.
+- **Database:** PostgreSQL.
+- **Code Execution:** Judge0 CE.
+- **Infrastructure:** Docker, Docker Compose, Nginx.
 
-At render time, the server builds a small serializable index from all MDX files and passes it to the client search dialog. The index includes title, description, tags, prose, and code-fence text. The client scores title/tag/exact-content matches locally, so searches need no external service or round trip.
+## 📖 Content Management
 
-For a much larger corpus, replace `getSearchIndex()` with a generated FlexSearch/Algolia index while preserving the `SearchDocument` contract in `src/types/docs.ts`.
+Documentation is written in MDX (Markdown with JSX) and stored in `content/docs/`. Adding a new topic is as simple as creating a new `.mdx` file with the appropriate frontmatter.
 
-## Deploy to Vercel
+## 🛡️ License
 
-1. Push this directory to a Git repository.
-2. Import the repository in [Vercel](https://vercel.com/new).
-3. Select the default Next.js framework preset; no custom build command is necessary.
-4. Set `NEXT_PUBLIC_SITE_URL` to the final deployment URL or custom domain.
-5. Deploy. Vercel runs `npm run build`, statically pre-renders the lesson pages, and serves sitemap/robots metadata automatically.
-
-The app uses only repository content at build time, so it is compatible with Vercel's default serverless/static deployment behavior.
-
-## Content coverage
-
-- Foundations: Time Complexity, Space Complexity, Recursion, Bit Manipulation
-- Linear structures: Arrays, Strings, Linked Lists, Stack, Queue
-- Trees and lookup: Trees, Binary Search Trees, Heap, Hashing, Tries
-- Algorithms: Graphs, Greedy Algorithms, Dynamic Programming, Backtracking
-- Advanced structures: Segment Trees, Disjoint Set Union
-
-## License
-
-MIT — customize this section for your organization before publishing.
+This project is open-source and available under the MIT License.
