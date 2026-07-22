@@ -4,21 +4,47 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 0 0% 98%;
     --foreground: 222 47% 11%;
     --border: 214 32% 91%;
+    --elevated: 0 0% 100%;
+    --surface: 0 0% 100%;
+    --text-default: 222 47% 11%;
+    --text-muted: 215 16% 47%;
+    
+    --brand-blue: 191 100% 40%;
+    --brand-purple: 271 76% 53%;
+    --brand-emerald: 160 84% 39%;
   }
 
   .dark {
-    --background: 222 47% 5%;
+    --background: 0 0% 0%;
     --foreground: 210 40% 98%;
-    --border: 217 33% 17%;
+    --border: 220 13% 18%;
+    --elevated: 225 16% 7%;
+    --surface: 225 15% 11%;
+    --text-default: 210 40% 98%;
+    --text-muted: 210 9% 58%;
+    
+    --brand-blue: 191 100% 50%;
+    --brand-purple: 271 76% 53%;
+    --brand-emerald: 160 84% 39%;
   }
 
-  * { @apply border-slate-200 dark:border-slate-800; }
+  * { border-color: hsl(var(--border)); }
   html { scroll-behavior: smooth; }
-  body { @apply bg-white text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-  ::selection { @apply bg-sky-200 text-slate-950 dark:bg-sky-900 dark:text-slate-50; }
+  body { 
+    @apply bg-background text-text antialiased; 
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; 
+  }
+  
+  .dark body {
+    background-image: radial-gradient(circle at 15% 50%, rgba(0, 240, 255, 0.03), transparent 25%),
+                      radial-gradient(circle at 85% 30%, rgba(138, 43, 226, 0.03), transparent 25%);
+    background-attachment: fixed;
+  }
+  
+  ::selection { @apply bg-brand-blue/20 text-foreground; }
 }
 
 @layer components {
