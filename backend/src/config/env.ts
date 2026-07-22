@@ -13,7 +13,7 @@ const rawEnvSchema = z.object({
   JWT_REFRESH_SECRET: z.string().min(32).default("development-refresh-secret-change-me-12345"),
   JWT_ACCESS_TTL: z.string().default("15m"),
   JWT_REFRESH_TTL: z.string().default("30d"),
-  JUDGE0_BASE_URL: z.string().url().default("http://localhost:2358"),
+  JUDGE0_BASE_URL: z.string().url().default("https://ce.judge0.com"),
   JUDGE0_API_KEY: z.string().optional(),
   JUDGE0_API_HOST: z.string().optional(),
   JUDGE0_TIMEOUT_MS: z.coerce.number().int().min(1000).max(120000).default(15000),
