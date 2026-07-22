@@ -41,7 +41,10 @@ function twoSum(nums, target) {
   }
 
   return [];
-}`,
+}
+
+// Test your code!
+console.log("Output:", twoSum([2, 7, 11, 15], 9));`,
   Python: `from typing import List
 
 class Solution:
@@ -54,8 +57,14 @@ class Solution:
                 return [positions[complement], index]
             positions[number] = index
 
-        return []`,
-  "C++": `#include <unordered_map>
+        return []
+
+# Test your code!
+if __name__ == "__main__":
+    sol = Solution()
+    print("Output:", sol.twoSum([2, 7, 11, 15], 9))`,
+  "C++": `#include <iostream>
+#include <unordered_map>
 #include <vector>
 using namespace std;
 
@@ -72,7 +81,16 @@ public:
 
         return {};
     }
-};`,
+};
+
+// Test your code!
+int main() {
+    Solution sol;
+    vector<int> nums = {2, 7, 11, 15};
+    vector<int> res = sol.twoSum(nums, 9);
+    cout << "Output: [" << res[0] << ", " << res[1] << "]" << endl;
+    return 0;
+}`,
   Java: `import java.util.HashMap;
 import java.util.Map;
 
@@ -89,6 +107,16 @@ class Solution {
         }
 
         return new int[0];
+    }
+}
+
+// Test your code!
+class Main {
+    public static void main(String[] args) {
+        Solution sol = new Solution();
+        int[] nums = {2, 7, 11, 15};
+        int[] res = sol.twoSum(nums, 9);
+        System.out.println("Output: [" + res[0] + ", " + res[1] + "]");
     }
 }`,
 };
@@ -111,7 +139,10 @@ function isValid(s) {
   }
 
   return stack.length === 0;
-}`,
+}
+
+// Test your code!
+console.log("Output:", isValid("()[]{}"));`,
   Python: `class Solution:
     def isValid(self, s: str) -> bool:
         pairs = {')': '(', ']': '[', '}': '{'}
@@ -124,8 +155,14 @@ function isValid(s) {
             else:
                 stack.append(character)
 
-        return not stack`,
-  "C++": `#include <stack>
+        return not stack
+
+# Test your code!
+if __name__ == "__main__":
+    sol = Solution()
+    print("Output:", sol.isValid("()[]{}"))`,
+  "C++": `#include <iostream>
+#include <stack>
 #include <string>
 using namespace std;
 
@@ -147,7 +184,14 @@ public:
         }
         return stack.empty();
     }
-};`,
+};
+
+// Test your code!
+int main() {
+    Solution sol;
+    cout << "Output: " << (sol.isValid("()[]{}") ? "true" : "false") << endl;
+    return 0;
+}`,
   Java: `import java.util.ArrayDeque;
 import java.util.Deque;
 
@@ -166,6 +210,14 @@ class Solution {
             }
         }
         return stack.isEmpty();
+    }
+}
+
+// Test your code!
+class Main {
+    public static void main(String[] args) {
+        Solution sol = new Solution();
+        System.out.println("Output: " + sol.isValid("()[]{}"));
     }
 }`,
 };
@@ -200,7 +252,15 @@ function numIslands(grid) {
   }
 
   return islands;
-}`,
+}
+
+// Test your code!
+const grid = [
+  ["1","1","0"],
+  ["1","0","0"],
+  ["0","0","1"]
+];
+console.log("Output:", numIslands(grid));`,
   Python: `from typing import List
 
 class Solution:
@@ -227,8 +287,19 @@ class Solution:
                     islands += 1
                     visit(row, column)
 
-        return islands`,
-  "C++": `#include <vector>
+        return islands
+
+# Test your code!
+if __name__ == "__main__":
+    sol = Solution()
+    grid = [
+        ["1","1","0"],
+        ["1","0","0"],
+        ["0","0","1"]
+    ]
+    print("Output:", sol.numIslands(grid))`,
+  "C++": `#include <iostream>
+#include <vector>
 using namespace std;
 
 class Solution {
@@ -256,7 +327,19 @@ public:
         }
         return islands;
     }
-};`,
+};
+
+// Test your code!
+int main() {
+    Solution sol;
+    vector<vector<char>> grid = {
+        {'1','1','0'},
+        {'1','0','0'},
+        {'0','0','1'}
+    };
+    cout << "Output: " << sol.numIslands(grid) << endl;
+    return 0;
+}`,
   Java: `class Solution {
     public int numIslands(char[][] grid) {
         int islands = 0;
@@ -280,6 +363,19 @@ public:
         visit(grid, row - 1, column);
         visit(grid, row, column + 1);
         visit(grid, row, column - 1);
+    }
+}
+
+// Test your code!
+class Main {
+    public static void main(String[] args) {
+        Solution sol = new Solution();
+        char[][] grid = {
+            {'1','1','0'},
+            {'1','0','0'},
+            {'0','0','1'}
+        };
+        System.out.println("Output: " + sol.numIslands(grid));
     }
 }`,
 };
