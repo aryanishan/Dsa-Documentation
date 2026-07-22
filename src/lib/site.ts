@@ -7,6 +7,10 @@ export const siteConfig = {
 
 export const categoryLabels: Record<string, string> = {
   Foundations: "Foundations",
+  Beginner: "Beginner",
+  Intermediate: "Intermediate",
+  "Data Structures": "Data structures",
+  Algorithms: "Algorithms",
   "Linear Data Structures": "Linear data structures",
   "Tree Data Structures": "Tree data structures",
   "Graph & Algorithmic Techniques": "Graph & algorithmic techniques",
@@ -17,13 +21,13 @@ export const roadmapStages = [
   {
     title: "Beginner",
     description: "Build intuition for linear structures and the operations that power them.",
-    slugs: ["arrays", "strings", "linked-lists", "stack", "queue"],
+    slugs: ["time-complexity", "space-complexity", "mathematics", "arrays", "strings", "linked-lists", "stack", "queue", "deque"],
     tone: "sky",
   },
   {
     title: "Intermediate",
     description: "Learn hierarchical data, ordering, lookup, and traversal patterns.",
-    slugs: ["trees", "binary-search-trees", "heap", "hashing", "graphs"],
+    slugs: ["recursion", "binary-search", "trees", "binary-search-trees", "heap", "hashing", "graphs"],
     tone: "violet",
   },
   {
@@ -33,6 +37,7 @@ export const roadmapStages = [
       "dynamic-programming",
       "greedy-algorithms",
       "segment-trees",
+      "fenwick-tree",
       "disjoint-set-union",
       "tries",
     ],
