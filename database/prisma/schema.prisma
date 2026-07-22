@@ -1,0 +1,254 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../backend/node_modules/.prisma/client"
+}
+
+generator seedClient {
+  provider = "prisma-client-js"
+  output   = "../generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum ProgressStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum SubmissionStatus {
+  PENDING
+  RUNNING
+  ACCEPTED
+  WRONG_ANSWER
+  TIME_LIMIT_EXCEEDED
+  MEMORY_LIMIT_EXCEEDED
+  RUNTIME_ERROR
+  COMPILATION_ERROR
+  INTERNAL_ERROR
+}
+
+enum Language {
+  C
+  CPP
+  JAVA
+  PYTHON
+  JAVASCRIPT
+  TYPESCRIPT
+  GO
+  RUST
+  CSHARP
+}
+
+model User {
+  id           String         @id @default(cuid())
+  name         String
+  email        String         @unique
+  passwordHash String
+  role         UserRole       @default(USER)
+  avatarUrl    String?
+  bio          String?        @db.Text
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  sessions     Session[]
+  bookmarks    Bookmark[]
+  progress     TopicProgress[]
+  history      RecentHistory[]
+  notes        Note[]
+  submissions  Submission[]
+  settings     UserSettings?
+
+  @@index([createdAt])
+}
+
+model Session {
+  id               String    @id @default(cuid())
+  userId           String
+  refreshTokenHash String
+  expiresAt        DateTime
+  revokedAt        DateTime?
+  createdAt        DateTime  @default(now())
+  userAgent        String?
+  ipAddress        String?
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+}
+
+model UserSettings {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  theme          String   @default("system")
+  editorFontSize Int      @default(14)
+  showMinimap    Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Topic {
+  id               String          @id @default(cuid())
+  slug             String          @unique
+  title            String
+  summary          String          @db.Text
+  content          String          @db.Text
+  category         String
+  difficulty       Difficulty?
+  tags             String[]
+  headings         Json
+  estimatedMinutes Int             @default(5)
+  sortOrder        Int             @default(0)
+  isPublished      Boolean         @default(false)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  codeExamples     CodeExample[]
+  bookmarks        Bookmark[]
+  progress         TopicProgress[]
+  history          RecentHistory[]
+  notes            Note[]
+
+  @@index([category, sortOrder])
+  @@index([isPublished, updatedAt])
+}
+
+model CodeExample {
+  id          String   @id @default(cuid())
+  topicId     String
+  language    Language
+  title       String
+  code        String   @db.Text
+  explanation String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  topic       Topic    @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@unique([topicId, language, title])
+  @@index([language])
+}
+
+model Bookmark {
+  id        String   @id @default(cuid())
+  userId    String
+  topicId   String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topic     Topic    @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, topicId])
+  @@index([userId, createdAt])
+}
+
+model TopicProgress {
+  id         String         @id @default(cuid())
+  userId     String
+  topicId    String
+  percent    Int            @default(0)
+  status     ProgressStatus @default(NOT_STARTED)
+  lastReadAt DateTime       @default(now())
+  completedAt DateTime?
+  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topic      Topic          @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, topicId])
+  @@index([userId, lastReadAt])
+}
+
+model RecentHistory {
+  id        String   @id @default(cuid())
+  userId    String
+  topicId   String
+  viewedAt  DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topic     Topic    @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, topicId])
+  @@index([userId, viewedAt])
+}
+
+model Note {
+  id        String   @id @default(cuid())
+  userId    String
+  topicId   String?
+  title     String
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topic     Topic?   @relation(fields: [topicId], references: [id], onDelete: SetNull)
+
+  @@index([userId, updatedAt])
+}
+
+model Problem {
+  id            String       @id @default(cuid())
+  slug          String       @unique
+  title         String
+  difficulty    Difficulty
+  statement     String       @db.Text
+  constraints   String       @db.Text
+  examples      Json
+  hints         String[]
+  starterCode   Json
+  tags          String[]
+  inputFormat   String?      @db.Text
+  outputFormat  String?      @db.Text
+  timeLimitMs   Int          @default(2000)
+  memoryLimitKb Int          @default(128000)
+  isPublished   Boolean      @default(false)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  testCases     ProblemTestCase[]
+  submissions   Submission[]
+
+  @@index([difficulty, createdAt])
+  @@index([isPublished, difficulty])
+}
+
+model ProblemTestCase {
+  id             String   @id @default(cuid())
+  problemId      String
+  input          String   @db.Text
+  expectedOutput String   @db.Text
+  isHidden       Boolean  @default(false)
+  weight         Int      @default(1)
+  createdAt      DateTime @default(now())
+  problem        Problem  @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@index([problemId, isHidden])
+}
+
+model Submission {
+  id                String           @id @default(cuid())
+  userId            String
+  problemId         String
+  language          Language
+  sourceCode        String           @db.Text
+  status            SubmissionStatus @default(PENDING)
+  stdout            String?          @db.Text
+  stderr            String?          @db.Text
+  compileOutput     String?          @db.Text
+  executionTimeMs   Int?
+  memoryKb          Int?
+  judgeToken        String?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problem           Problem          @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([problemId, status])
+}

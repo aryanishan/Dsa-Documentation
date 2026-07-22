@@ -1,0 +1,30 @@
+{
+  "name": "@dsa-docs/database",
+  "version": "1.0.0",
+  "private": true,
+  "description": "PostgreSQL schema, migrations, and seed data for DSA Docs.",
+  "scripts": {
+    "generate": "prisma generate --schema prisma/schema.prisma",
+    "migrate:dev": "prisma migrate dev --schema prisma/schema.prisma",
+    "migrate:deploy": "prisma migrate deploy --schema prisma/schema.prisma",
+    "seed": "tsx prisma/seed.ts",
+    "db:seed": "npm run generate && npm run seed",
+    "studio": "prisma studio --schema prisma/schema.prisma"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.7.0",
+    "bcryptjs": "^3.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.2",
+    "prisma": "^6.7.0",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.3"
+  },
+  "engines": {
+    "node": ">=20.9.0"
+  }
+}
